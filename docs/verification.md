@@ -32,4 +32,21 @@ Schema validation uses a temporary file under ignored supabase/.temp so the cont
 
 ## Remote CI and review
 
-The initial [GitHub CI run](https://github.com/Flyco-app/flyco/actions/runs/35277327546) passed both quality and database jobs on commit a13f518, including Chromium and all database checks. GitHub flagged deprecated Node 20 action runtimes; the follow-up pins maintained action releases. The [PR checks](https://github.com/Flyco-app/flyco/pull/1/checks) show the current commit result. These are local-runner E2E checks, not deployed-preview E2E. No production release or merge is authorized by a green foundation check alone.
+The initial [GitHub CI run](https://github.com/Flyco-app/flyco/actions/runs/35277327546) passed both quality and database jobs on commit a13f518, including Chromium and all database checks. GitHub flagged deprecated Node 20 action runtimes; the follow-up pins maintained action releases. The [PR checks](https://github.com/Flyco-app/flyco/pull/1/checks) show the current commit result. These are local-runner E2E checks, not deployed-preview E2E. No production release is authorized by a green foundation check alone. The owner subsequently authorized routine in-scope PR merges after review and exact-head checks.
+
+## Senior foundation review — 2026-09-18
+
+| Check                             | Result                                                                                                                             |
+| --------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
+| pnpm install --frozen-lockfile    | PASS with pinned pnpm 12.4.2 / Node 24.18.0                                                                                        |
+| pnpm lint                         | PASS, zero warnings                                                                                                                |
+| pnpm typecheck                    | PASS, strict including dependency declarations                                                                                     |
+| pnpm test / test:coverage         | PASS, 37 tests; 100% lines/statements/functions and 98.92% branches in scoped env/telemetry modules                                |
+| pnpm build                        | PASS, unchanged Turbopack production build after clearing generated .next output caching a sandbox port denial                     |
+| pnpm test:e2e                     | PASS, 2 Chromium tests against a freshly started production build                                                                  |
+| pnpm db:lint / db:test            | PASS, no lint errors and 2 local foundation pgTAP checks                                                                           |
+| pnpm db:design:check              | PASS, 21 rolled-back reference checks including default-deny roles, FK indexes, reservation normalization and transfer consistency |
+| pnpm secrets:check / format:check | PASS                                                                                                                               |
+| pnpm audit --prod                 | No known vulnerabilities reported by registry audit at review time; not proof of absence                                           |
+
+No runtime providers were contacted by product code and no remote schema was modified. Full-stack Auth/email health and deployed-preview/production release controls are still unverified; see [review](phase-0-review.md). GitHub CI must independently pass on the exact review PR head before automatic merge. The original test totals above are historical, not the current suite.

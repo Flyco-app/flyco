@@ -37,3 +37,7 @@ A12 carries a tooling maintenance risk: ESLint 9 is the compatible line but upst
 ## Deferred deliberately
 
 No mobile app, microservices, split admin deployment, AI matching, PostGIS, SMS/push, multi-leg delivery, multiple settlement currencies or general-purpose workflow framework. This does not prevent adding them later; each needs a concrete product requirement and migration/design review.
+
+## Phase 0 senior review (2026-09-18)
+
+Keep the modular monolith and incremental migrations. Safe DTOs are not column authorization; use explicit grants/private data separation and reviewed narrow command privileges. PaymentIntent lifecycle includes retries after card failure; do not equate failure events with terminal payment attempts. Credentialed preview testing is disabled until deployment ownership and SHA verification exist. Routine PRs may be auto-merged by Codex after exact-head checks under the owner's standing authorization; production gates are unchanged. Details and remaining gates: [Phase 0 review](phase-0-review.md).

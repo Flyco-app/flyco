@@ -3,16 +3,30 @@ import { z } from 'zod';
 const optional = (schema: z.ZodType<string>) =>
   z.preprocess((v) => (v === '' ? undefined : v), schema.optional());
 const url = optional(z.url());
-const secret = optional(z.string().min(1));
+const origin = optional(
+  z.url().refine((value) => {
+    const parsed = new URL(value);
+    return (
+      ['http:', 'https:'].includes(parsed.protocol) &&
+      !parsed.username &&
+      !parsed.password &&
+      parsed.pathname === '/' &&
+      !parsed.search &&
+      !parsed.hash
+    );
+  }),
+);
 export const serverEnvSchema = z
   .object({
     APP_ENV: z.preprocess(
       (v) => (v === '' ? undefined : v),
       z.enum(['local', 'preview', 'staging', 'production']).default('local'),
     ),
-    APP_URL: url,
-    SUPABASE_URL: url,
-    SUPABASE_PUBLISHABLE_KEY: secret,
+    APP_URL: origin,
+    SUPABASE_URL: origin,
+    SUPABASE_PUBLISHABLE_KEY: optional(
+      z.string().regex(/^sb_publishable_[A-Za-z0-9_-]+$/),
+    ),
     STRIPE_SECRET_KEY: optional(
       z.string().regex(/^(sk|rk)_(test|live)_[A-Za-z0-9]+$/),
     ),
@@ -104,6 +118,12 @@ export function parseServerEnv(
 ): ServerEnv {
   if (input.VERCEL === '1' && (!input.APP_ENV || input.APP_ENV === 'local'))
     throw new Error('Hosted runtime requires explicit APP_ENV.');
+  if (
+    input.VERCEL === '1' &&
+    ((input.VERCEL_ENV === 'preview' && input.APP_ENV === 'production') ||
+      (input.VERCEL_ENV === 'production' && input.APP_ENV !== 'production'))
+  )
+    throw new Error('APP_ENV conflicts with the Vercel deployment target.');
   const previewURL =
     input.APP_ENV === 'preview' &&
     /^[a-z0-9.-]+\.vercel\.app$/.test(input.VERCEL_URL ?? '')

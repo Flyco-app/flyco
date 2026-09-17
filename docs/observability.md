@@ -2,7 +2,7 @@
 
 ## Current structure
 
-Sentry Next.js SDK is installed. `src/instrumentation.ts` validates environment at Node runtime start and initializes Sentry only if SENTRY_DSN is supplied. No DSN means telemetry is explicitly unconfigured; provider calls never return mock success. `onRequestError` captures server request failures when configured. The scrubber drops user, request, breadcrumbs, arbitrary contexts/extra/message and exception text, preserving stack diagnostics. Tracing is off until safe attribute policies and sampling budgets exist.
+Sentry Next.js SDK is installed. `src/instrumentation.ts` validates environment at Node runtime start and initializes Sentry only if SENTRY_DSN is supplied. No DSN means telemetry is explicitly unconfigured; provider calls never return mock success. `onRequestError` captures server request failures when configured. The scrubber constructs an allowlist of valid event ID, numeric timestamp, approved environment and redacted exceptions with numeric frame coordinates. It drops tags, transaction names, fingerprints, log entries, stack paths/function names/local variables/source context and all other free-form fields. This intentionally reduces grouping/source-map detail until reviewed safe source mapping exists. Tracing is off until safe attribute policies and sampling budgets exist.
 
 Browser/edge instrumentation, error boundary capture, private source-map upload, release tagging and live alert routing are not configured yet. Add these with the first interactive UI/verified Sentry project; tests must prove no PII/URLs/session tokens leak. Never expose SENTRY_AUTH_TOKEN publicly. Source-map builds must fail visibly if an enabled upload fails; missing integration must not be reported as successful.
 

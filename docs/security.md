@@ -6,7 +6,7 @@ Protect identities, addresses, item contents, messages, evidence and money from 
 
 ## Implemented foundation controls
 
-Strict TypeScript/Zod, server-only provider factories, empty-value env template, ignored secrets/artifacts, local-only Supabase configuration with explicit grants required, no product API exposure, baseline security headers, privacy-filtered optional server Sentry, tests for configuration isolation/redaction, CI secret-pattern scan and lockfile. No service-role variable/client is present. Schema reference is default-deny and not a migration. These controls do not constitute finished product security.
+Strict TypeScript/Zod, server-only provider factories, empty-value env template, ignored secrets/artifacts, local-only Supabase configuration with explicit grants required, no product API exposure, baseline security headers, privacy-filtered optional server Sentry, modern publishable-key-only validation and Vercel target checks, tests for configuration isolation/redaction, CI secret-pattern scan and lockfile. No service-role variable/client is present. Schema reference is default-deny and not a migration. These controls do not constitute finished product security.
 
 ## Controls required before corresponding features
 
