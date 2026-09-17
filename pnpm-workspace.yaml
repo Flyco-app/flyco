@@ -1,0 +1,8 @@
+saveExact: true
+allowBuilds:
+  '@sentry/cli': false
+  esbuild: true
+  supabase: true
+  sharp: false
+  unrs-resolver: false
+engineStrict: true
