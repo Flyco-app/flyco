@@ -32,4 +32,4 @@ Schema validation uses a temporary file under ignored supabase/.temp so the cont
 
 ## Remote CI and review
 
-GitHub CI results will be linked in the foundation PR. Local results above must not be represented as remote CI or deployed-preview E2E results. No production release or merge is authorized by a green foundation check alone.
+The initial [GitHub CI run](https://github.com/Flyco-app/flyco/actions/runs/35277327546) passed both quality and database jobs on commit a13f518, including Chromium and all database checks. GitHub flagged deprecated Node 20 action runtimes; the follow-up pins maintained action releases. The [PR checks](https://github.com/Flyco-app/flyco/pull/1/checks) show the current commit result. These are local-runner E2E checks, not deployed-preview E2E. No production release or merge is authorized by a green foundation check alone.
