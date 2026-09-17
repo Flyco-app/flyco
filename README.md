@@ -41,7 +41,7 @@ The existing remote project is **staging**. The separate **flyco-production** pr
 
 ## Environment configuration
 
-`.env.example` contains names and empty values only. Runtime schema lives in `src/lib/env/schema.ts`; server-only accessor in `server.ts`. Stripe/Resend clients throw if invoked without configuration. APP_ENV is local/preview/staging/production; hosted deployments require an HTTPS APP_URL. Supabase and email values are configured in pairs. Stripe live credentials are rejected outside production and test credentials rejected in production. Provider secrets remain server-side. SENTRY_AUTH_TOKEN and Vercel tokens are CI/deployment credentials, not browser variables.
+`.env.example` contains names and empty values only. Runtime schema lives in `src/lib/env/schema.ts`; server-only accessor in `server.ts`. Stripe/Resend clients throw if invoked without configuration. APP_ENV is local/preview/staging/production; hosted deployments require an HTTPS APP_URL. Supabase and email values are configured in pairs. Only modern sb_publishable_ Supabase keys are accepted; secret/service-role and legacy JWT keys are rejected. Stripe live credentials are rejected outside production and test credentials rejected in production. Provider secrets remain server-side. SENTRY_AUTH_TOKEN and Vercel tokens are CI/deployment credentials, not browser variables.
 
 No secrets are required to build the foundation. Configure sensitive hosted values via provider/GitHub environment settings once integrations are enabled. Never paste them into chat or commit them. See [deployment](docs/deployment.md) and [services](docs/services.md).
 

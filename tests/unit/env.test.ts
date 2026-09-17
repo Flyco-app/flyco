@@ -55,13 +55,13 @@ describe('environment isolation', () => {
     expect(() =>
       parseServerEnv({
         SUPABASE_URL: 'https://example.supabase.co',
-        SUPABASE_PUBLISHABLE_KEY: 'fixture',
+        SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
       }),
     ).toThrow('SUPABASE_URL');
     expect(
       parseServerEnv({
         SUPABASE_URL: 'http://127.0.0.1:55321',
-        SUPABASE_PUBLISHABLE_KEY: 'fixture',
+        SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
       }).SUPABASE_URL,
     ).toBe('http://127.0.0.1:55321');
   });
@@ -92,7 +92,7 @@ it.each([
       APP_ENV,
       APP_URL: 'https://example.invalid',
       SUPABASE_URL: `https://${ref}.supabase.co`,
-      SUPABASE_PUBLISHABLE_KEY: 'fixture',
+      SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
     }),
   ).toThrow('SUPABASE_URL');
 });
@@ -106,7 +106,7 @@ it.each([
       APP_ENV,
       APP_URL: 'https://example.invalid',
       SUPABASE_URL: `https://${ref}.supabase.co`,
-      SUPABASE_PUBLISHABLE_KEY: 'fixture',
+      SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
     }).APP_ENV,
   ).toBe(APP_ENV);
 });
@@ -125,4 +125,43 @@ it('can use the provider-generated preview hostname without inventing a URL', ()
       VERCEL_URL: 'attacker.invalid/path',
     }),
   ).toThrow('APP_URL');
+});
+
+it.each(['sb_secret_fixture', 'legacy-jwt-fixture'])(
+  'rejects privileged or legacy Supabase keys: %s',
+  (key) => {
+    expect(() =>
+      parseServerEnv({
+        SUPABASE_URL: 'http://127.0.0.1:55321',
+        SUPABASE_PUBLISHABLE_KEY: key,
+      }),
+    ).toThrow('SUPABASE_PUBLISHABLE_KEY');
+  },
+);
+
+it.each([
+  'ftp://127.0.0.1',
+  'http://user:secret@127.0.0.1',
+  'http://127.0.0.1/path',
+  'http://127.0.0.1?token=secret',
+])('rejects malformed service origins: %s', (SUPABASE_URL) => {
+  expect(() =>
+    parseServerEnv({
+      SUPABASE_URL,
+      SUPABASE_PUBLISHABLE_KEY: 'sb_publishable_fixture',
+    }),
+  ).toThrow('SUPABASE_URL');
+});
+it.each([
+  ['preview', 'production'],
+  ['production', 'staging'],
+])('rejects a %s deployment labeled %s', (VERCEL_ENV, APP_ENV) => {
+  expect(() =>
+    parseServerEnv({
+      VERCEL: '1',
+      VERCEL_ENV,
+      APP_ENV,
+      APP_URL: 'https://example.invalid',
+    }),
+  ).toThrow('deployment target');
 });

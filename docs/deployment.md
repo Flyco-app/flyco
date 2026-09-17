@@ -15,7 +15,7 @@ No production database in development, previews or CI. No fallback from missing 
 
 `codex/* branch → PR → format/secret scan/lint/typecheck/unit+DB tests/build → Vercel preview → exact-preview E2E → review → merge → protected production release`.
 
-CI is executable without provider secrets. GitHub-hosted runners start Supabase locally. Preview E2E can be manually dispatched with an immutable deployment URL; automatic deployment remains disabled in vercel.json until protected release configuration is established. A manual URL alone does not prove commit identity: before making this a merge gate, verify Vercel deployment git SHA/project/target against the PR head and post a required status for that SHA. Never run privileged pull_request_target checks on untrusted PR code.
+CI is executable without provider secrets. GitHub-hosted runners start Supabase locally. Credential-free preview smoke tests can be manually dispatched with an immutable deployment URL; automatic deployment remains disabled in vercel.json until protected release configuration is established. A manual URL alone does not prove commit identity: before making this a merge gate, verify Vercel deployment git SHA/project/target against the PR head and post a required status for that SHA. Never run privileged pull_request_target checks on untrusted PR code.
 
 Production release must require successful main-commit CI, staging migration validation and a protected `production` environment approval. Build a production-configured deployment without assigning the domain, smoke-test its immutable URL, then promote. Preview builds containing different public environment variables must not be promoted as production builds. Restrict deploy credentials and main pushes; disable auto production deploys that bypass review. Repository configuration alone is not an enforced gate when the hosting/GitHub plan does not support protection; record that limitation.
 
@@ -44,3 +44,9 @@ Commercial Vercel plan, Supabase recovery plan, Stripe corridor/business approva
 ## Verified GitHub plan limitation
 
 The private organization repository is on Free. Main branch protection creation returned HTTP 403 (upgrade required). Required production environment reviewers returned HTTP 422 (billing plan unsupported). The production environment exists with a protected-branch policy only; this is NOT a working approval gate. Keep deployment disabled until branch protection and independent review are enforceable. Engineering will configure the rules after an appropriate organization-plan upgrade is approved; do not make source public to bypass this limitation.
+
+## Review correction: preview credentials and routine merges
+
+The manual smoke workflow does not receive any bypass secret. Playwright refuses a configured bypass secret: a `.vercel.app` suffix proves neither ownership nor the PR commit, and global request headers/traces could expose credentials. Phase 0B must verify deployment project/team/preview target/SHA through authenticated provider metadata before using an origin-scoped bypass mechanism; prevent cross-origin forwarding and secret-bearing artifacts. Protected previews remain unverified until that exists.
+
+The owner authorizes Codex to review and squash-merge routine in-scope PRs after all applicable checks pass on the exact head, without repeated confirmation. Do not bypass branch protections or unresolved reviews. This workflow preference does not grant paid-plan changes or production release approval; automatic production deployment remains disabled.

@@ -13,7 +13,7 @@ alter table public.countries force row level security;
 revoke all on public.countries from public, anon, authenticated;
 
 create table public.cities (
-  id uuid primary key default gen_random_uuid(), country_code text not null references public.countries(code), name text not null, timezone text not null, unique (country_code, name)
+  id uuid primary key default gen_random_uuid(), country_code text not null references public.countries(code), name text not null, timezone text not null
 );
 alter table public.cities enable row level security;
 alter table public.cities force row level security;
@@ -163,8 +163,8 @@ create table public.matches (
   trip_id uuid not null references public.trips(id),
   request_id uuid not null references public.delivery_requests(id),
   algorithm_version text not null,
-  trip_version integer not null,
-  request_version integer not null,
+  trip_version integer not null check (trip_version > 0),
+  request_version integer not null check (request_version > 0),
   reasons jsonb not null check (jsonb_typeof(reasons) = 'array'),
   evaluated_at timestamptz not null default now(),
   expires_at timestamptz not null,
@@ -198,6 +198,7 @@ create table public.bookings (
   foreign key (request_id, sender_id) references public.delivery_requests(id, sender_id),
   check (sender_id <> traveler_id),
   check (proposed_by in (sender_id, traveler_id)),
+  check (expires_at > created_at),
   check (gross_minor = platform_fee_minor + traveler_net_minor)
 );
 alter table public.bookings enable row level security;
@@ -206,8 +207,6 @@ revoke all on public.bookings from public, anon, authenticated;
 
 create table private.capacity_reservations (
   booking_id uuid primary key references public.bookings(id),
-  trip_id uuid not null references public.trips(id),
-  weight_grams integer not null check (weight_grams > 0),
   state text not null check (state in ('held','committed','released')),
   hold_until timestamptz,
   released_at timestamptz,
@@ -226,7 +225,7 @@ create table public.booking_events (
   command text not null,
   from_state text,
   to_state text not null,
-  version integer not null,
+  version integer not null check (version > 0),
   reason_code text,
   created_at timestamptz not null default now(),
   unique (booking_id, version)
@@ -298,14 +297,17 @@ create table private.payments (
   booking_id uuid not null references public.bookings(id),
   provider_account_id text not null,
   provider_intent_id text,
+  provider_checkout_session_id text,
   livemode boolean not null,
   amount_minor bigint not null check (amount_minor > 0),
   currency text not null check (currency ~ '^[A-Z]{3}$'),
-  state text not null check (state in ('created','requires_payment_method','requires_action','processing','authorized','succeeded','failed','cancelled')),
+  state text not null check (state in ('created','requires_payment_method','requires_confirmation','requires_action','processing','authorized','succeeded','failed','cancelled')),
   idempotency_key text not null unique,
-  version integer not null default 1,
+  version integer not null default 1 check (version > 0),
   created_at timestamptz not null default now(),
   updated_at timestamptz not null default now(),
+  unique (id, booking_id, currency),
+  unique (provider_account_id, livemode, provider_checkout_session_id),
   unique (provider_account_id, livemode, provider_intent_id)
 );
 alter table private.payments enable row level security;
@@ -336,6 +338,7 @@ create table private.transfers (
   reversed_minor bigint not null default 0 check (reversed_minor >= 0 and reversed_minor <= amount_minor),
   currency text not null check (currency ~ '^[A-Z]{3}$'),
   state text not null check (state in ('pending','submitted','succeeded','failed','partially_reversed','reversed')),
+  foreign key (payment_id, booking_id, currency) references private.payments(id, booking_id, currency),
   idempotency_key text not null unique,
   created_at timestamptz not null default now()
 );
@@ -488,7 +491,7 @@ create table private.identity_verifications (
   reason_code text,
   verified_at timestamptz,
   expires_at timestamptz,
-  version integer not null default 1,
+  version integer not null default 1 check (version > 0),
   created_at timestamptz not null default now(),
   unique (provider, provider_reference),
   check (state <> 'verified' or verified_at is not null),
@@ -554,6 +557,9 @@ create table private.webhook_inbox (
   attempts integer not null default 0 check (attempts >= 0),
   available_at timestamptz not null default now(),
   lease_until timestamptz,
+  lease_token uuid,
+  check ((state = 'processing') = (lease_until is not null and lease_token is not null)),
+  check ((lease_until is null) = (lease_token is null)),
   received_at timestamptz not null default now(),
   unique (provider, provider_account_id, livemode, event_id)
 );
@@ -570,6 +576,9 @@ create table private.outbox_jobs (
   attempts integer not null default 0 check (attempts >= 0),
   available_at timestamptz not null default now(),
   lease_until timestamptz,
+  lease_token uuid,
+  check ((state = 'processing') = (lease_until is not null and lease_token is not null)),
+  check ((lease_until is null) = (lease_token is null)),
   last_error_code text,
   created_at timestamptz not null default now()
 );
@@ -618,32 +627,22 @@ create index audit_resource_time on private.audit_events (resource_type, resourc
 create index ledger_journal on private.ledger_entries (journal_id, currency);
 create index cities_country_code_idx on public.cities (country_code);
 create index profile_details_residence_country_idx on private.profile_details (residence_country);
-create index staff_roles_user_id_idx on private.staff_roles (user_id);
 create index staff_roles_granted_by_idx on private.staff_roles (granted_by);
 create index trips_traveler_id_idx on public.trips (traveler_id);
 create index trips_origin_city_id_idx on public.trips (origin_city_id);
 create index trips_destination_city_id_idx on public.trips (destination_city_id);
-create index trip_categories_trip_id_idx on public.trip_categories (trip_id);
 create index trip_categories_category_id_idx on public.trip_categories (category_id);
 create index delivery_requests_sender_id_idx on public.delivery_requests (sender_id);
 create index delivery_requests_origin_city_id_idx on public.delivery_requests (origin_city_id);
 create index delivery_requests_destination_city_id_idx on public.delivery_requests (destination_city_id);
 create index items_request_id_idx on public.items (request_id);
 create index items_category_id_idx on public.items (category_id);
-create index item_photos_item_id_idx on public.item_photos (item_id);
-create index matches_trip_id_idx on public.matches (trip_id);
 create index matches_request_id_idx on public.matches (request_id);
 create index bookings_sender_id_idx on public.bookings (sender_id);
 create index bookings_traveler_id_idx on public.bookings (traveler_id);
 create index bookings_proposed_by_idx on public.bookings (proposed_by);
-create index capacity_reservations_trip_id_idx on private.capacity_reservations (trip_id);
-create index booking_events_booking_id_idx on public.booking_events (booking_id);
 create index booking_events_actor_id_idx on public.booking_events (actor_id);
-create index conversation_members_conversation_id_idx on public.conversation_members (conversation_id);
 create index conversation_members_user_id_idx on public.conversation_members (user_id);
-create index messages_conversation_id_idx on public.messages (conversation_id);
-create index messages_author_id_idx on public.messages (author_id);
-create index payment_accounts_user_id_idx on private.payment_accounts (user_id);
 create index payment_accounts_country_code_idx on private.payment_accounts (country_code);
 create index payments_booking_id_idx on private.payments (booking_id);
 create index refunds_payment_id_idx on private.refunds (payment_id);
@@ -651,11 +650,9 @@ create index transfers_booking_id_idx on private.transfers (booking_id);
 create index transfers_payment_id_idx on private.transfers (payment_id);
 create index transfers_recipient_account_id_idx on private.transfers (recipient_account_id);
 create index payouts_recipient_account_id_idx on private.payouts (recipient_account_id);
-create index payout_allocations_payout_id_idx on private.payout_allocations (payout_id);
 create index payout_allocations_transfer_id_idx on private.payout_allocations (transfer_id);
 create index payment_events_payment_id_idx on private.payment_events (payment_id);
 create index ledger_entries_booking_id_idx on private.ledger_entries (booking_id);
-create index reviews_booking_id_idx on public.reviews (booking_id);
 create index reviews_author_id_idx on public.reviews (author_id);
 create index reviews_subject_id_idx on public.reviews (subject_id);
 create index reports_reporter_id_idx on public.reports (reporter_id);
@@ -674,9 +671,15 @@ create index delivery_confirmations_booking_id_idx on private.delivery_confirmat
 create index delivery_evidence_booking_id_idx on private.delivery_evidence (booking_id);
 create index delivery_evidence_uploader_id_idx on private.delivery_evidence (uploader_id);
 create index audit_events_actor_id_idx on private.audit_events (actor_id);
-create index idempotency_keys_actor_id_idx on private.idempotency_keys (actor_id);
-create index user_blocks_blocker_id_idx on public.user_blocks (blocker_id);
 create index user_blocks_blocked_id_idx on public.user_blocks (blocked_id);
+
+-- Composite ownership FKs need full (not partial) child lookup indexes.
+create index bookings_trip_owner_idx on public.bookings (trip_id, traveler_id);
+create index bookings_request_owner_idx on public.bookings (request_id, sender_id);
+create index inbox_expired_lease on private.webhook_inbox (lease_until, id) where state = 'processing';
+create index outbox_expired_lease on private.outbox_jobs (lease_until, id) where state = 'processing';
+create index booking_deadlines on public.bookings (expires_at, id) where status in ('proposed','accepted','payment_pending');
+create index idempotency_expiry on private.idempotency_keys (expires_at);
 
 -- No policies, table grants, RPCs, buckets, seeds or realtime publication are enabled.
 -- Feature migrations must supply least-privilege access and transaction guards.

@@ -16,20 +16,25 @@ Do not advertise escrow. Card authorization cannot be held indefinitely until an
 
 ## Collection state machine (per attempt)
 
-| From                         | Valid next states                                                                              | Trigger                                          |
-| ---------------------------- | ---------------------------------------------------------------------------------------------- | ------------------------------------------------ |
-| created                      | requires_payment_method, requires_action, processing, authorized, succeeded, failed, cancelled | Provider creates/initializes attempt             |
-| requires_payment_method      | requires_action, processing, authorized, succeeded, failed, cancelled                          | Sender supplies payment method/provider confirms |
-| requires_action              | requires_payment_method, processing, authorized, succeeded, failed, cancelled                  | Authentication result                            |
-| processing                   | requires_payment_method, requires_action, authorized, succeeded, failed, cancelled             | Authoritative provider update                    |
-| authorized                   | succeeded, cancelled                                                                           | Capture or authorization expiry/cancel           |
-| succeeded, failed, cancelled | none                                                                                           | Terminal collection outcome                      |
+| From                         | Valid next states                                                                                                     | Trigger                                       |
+| ---------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------- |
+| created                      | requires_payment_method, requires_confirmation, requires_action, processing, authorized, succeeded, failed, cancelled | Initialize/reconcile provider object          |
+| requires_payment_method      | requires_confirmation, requires_action, processing, authorized, succeeded, cancelled                                  | Retry the same collection with another method |
+| requires_confirmation        | requires_payment_method, requires_action, processing, authorized, succeeded, cancelled                                | Provider confirmation                         |
+| requires_action              | requires_payment_method, requires_confirmation, processing, authorized, succeeded, cancelled                          | Authentication result                         |
+| processing                   | requires_payment_method, requires_confirmation, requires_action, authorized, succeeded, cancelled                     | Authoritative provider update                 |
+| authorized                   | succeeded, cancelled                                                                                                  | Capture or expiry/cancel                      |
+| succeeded, failed, cancelled | none                                                                                                                  | Terminal collection outcome                   |
 
-A retry after a terminal failure creates another payment attempt. Reconciliation can ingest missed intermediate provider states by verifying current provider object and recording a reconciliation event, not accepting arbitrary user changes. At most one outstanding collection per booking; cancel/reconcile an ambiguous attempt before starting another. Success is not changed to failed by an older event.
+One payments row represents one provider PaymentIntent lifecycle, not each failed card submission. Stripe `payment_intent.payment_failed` commonly returns the same intent to `requires_payment_method`; it must not mark that row terminal or allow a second charge. `requires_capture` maps to authorized; Stripe `canceled` maps to cancelled. Local failed is reserved for definitive initialization failure before any provider object exists. A timeout is unknown, not failed: retain the row, reuse the same idempotency key and reconcile. After a provider intent exists, only verified cancellation releases it for replacement. Store Checkout Session ID separately from PaymentIntent ID; Session completion is not proof of collected funds for asynchronous methods.
+
+The unique index admits at most one nonfailed/noncancelled collection, including succeeded, per booking. Do not recollect a refunded booking under a new attempt. On a valid cancelled attempt a new attempt may be created while the booking hold is still valid. Out-of-order events fetch current provider state and append a reconciliation event; a stale event cannot regress success. Payment methods must settle within the approved reservation policy; configure eligible methods before launch.
+
+Source: [Stripe PaymentIntent lifecycle](https://docs.stripe.com/payments/paymentintents/lifecycle).
 
 Refunds are separate rows: pending → succeeded | failed | cancelled. Aggregate summary: unrefunded / partially_refunded / fully_refunded, derived from successful refund totals, bounded by collected amount under payment lock. No terminal `refunded` booking state. Chargebacks have their own provider dispute state (open → won | lost), and may occur after a full customer refund; never overwrite collection history.
 
-Transfers: pending → submitted → succeeded | failed, succeeded → partially_reversed | reversed. A timeout stays submitted/unknown until reconciled; no blind new transfer. Payouts: pending → in_transit | paid | failed | cancelled; in_transit → paid | failed; paid → failed only for documented late bank return. Provider balance transactions/allocations connect batched payouts to transfers; one payout is not necessarily one booking. Refund does not automatically reverse a transfer or recover a paid payout: enqueue and audit explicit compensation.
+Transfers: pending → submitted → succeeded | failed, succeeded → partially_reversed | reversed; partially_reversed → partially_reversed | reversed as additional reversals accumulate. A timeout stays submitted/unknown until reconciled; no blind new transfer. Payouts: pending → in_transit | paid | failed | cancelled; in_transit → paid | failed; paid → failed only for documented late bank return. Provider balance transactions/allocations connect batched payouts to transfers; one payout is not necessarily one booking. Refund does not automatically reverse a transfer or recover a paid payout: enqueue and audit explicit compensation.
 
 ## Concurrency, audit and operations
 
@@ -40,3 +45,7 @@ A refund command locks payment and sums pending+succeeded refunds before admitti
 ## Required tests
 
 Invalid/missing signature, mismatched account/mode/currency/amount, duplicate/out-of-order delivery, network timeout after successful API call, two refunds racing, late payment after reservation expiry, disputed completed booking, refund after transfer, failed bank payout, disabled payout capabilities, partial refunds/reversals and reconciliation drift. Test-only provider fixtures must be clearly labeled; no production fake successes.
+
+## Deferred accounting decisions
+
+Payout allocations are reconciliation records, not evidence that Stripe earmarks a booking's money. Connected-account balances are fungible; use actual balance-transaction reports, fees and adjustments. A balanced journal needs an atomic posting command and deferred per-journal/currency checks before any ledger migration is usable; the reference table alone is not a functioning ledger. Source keys identify individual lines, with an operation-level dedupe guard in the posting command. Scope provider IDs to their actual account/mode before multi-platform support; the current deployment is one Flyco platform per environment. Transfer commands must verify recipient owns the booking traveler, account/mode/currency match, and pending plus succeeded transfers cannot exceed the approved net obligation under the booking/payment lock. These are payment-phase gates, not Phase 1 dependencies.

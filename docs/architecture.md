@@ -4,7 +4,7 @@
 
 Use one Next.js App Router application at the repository root. A monorepo with apps/web, apps/admin and five shared packages would create multiple builds, deployments and abstraction boundaries before reuse exists. Keep UI, validation and integration code in clear modules; extract a pnpm workspace only when a second independently released application or worker needs shared code. pnpm-workspace.yaml currently configures dependency build permissions, not multiple packages.
 
-`src/app` owns routing and presentation. `src/components/ui` will contain source-owned shadcn primitives. `src/modules/<domain>` will own use cases, schemas and data access when the corresponding phase begins. `src/lib` is small infrastructure: environment validation, Supabase, provider factories and monitoring. Do not put all business logic in lib or route handlers.
+`src/app` owns routing and presentation. `src/components/ui` will contain source-owned shadcn primitives. `src/modules/<domain>` will own use cases, schemas and data access when the corresponding phase begins. `src/lib` is small infrastructure: environment validation, provider factories and monitoring. `src/lib/supabase` contains only a README; request-scoped Supabase clients do not exist yet. Do not put all business logic in lib or route handlers.
 
 The future `/admin` subtree is a distinct authorization surface inside the same deployment. Every server read/action must check live staff permissions and MFA; route/layout checks alone do not secure anything. It currently returns 404. Separate admin deployment is a later defense-in-depth option, not a substitute for permission checks.
 
@@ -16,7 +16,7 @@ Use Supabase Auth, PostgreSQL, private Storage and selectively Realtime. The dat
 
 ## Consistency and transactions
 
-One transaction locks trip, request and booking in a documented consistent order, verifies expected version, reserves capacity, appends events and enqueues work. External APIs are called after commit using stable idempotency keys. A follow-up transaction records results. Reconciliation repairs ambiguous outcomes. Deadlock/serialization errors are bounded-retryable; authorization/validation errors are not. UTC clocks come from PostgreSQL for deadlines.
+One transaction locks current account controls (ordered by UUID), then trip, request and booking in a documented consistent order, verifies expected version, reserves capacity, appends events and enqueues work. External APIs are called after commit using stable idempotency keys. A follow-up transaction records results. Reconciliation repairs ambiguous outcomes. Deadlock/serialization errors are bounded-retryable; authorization/validation errors are not. UTC clocks come from PostgreSQL for deadlines.
 
 ## Privacy boundaries
 
@@ -35,3 +35,15 @@ First optimize indexed queries, keyset pagination and transaction duration. Add 
 - [Next installation](https://nextjs.org/docs/app/getting-started/installation): Next 16.3.5 verified against npm on 2026-09-17.
 - [Supabase security](https://supabase.com/docs/guides/database/postgres/row-level-security).
 - [shadcn existing Next.js setup](https://ui.shadcn.com/docs/installation/next).
+
+## Phase 0 review: what actually runs
+
+Implemented: preparation page, static security headers, strict environment parser, lazy server-only Stripe/Resend factories, optional privacy-allowlisted Sentry server capture, local Supabase config, unit/Playwright/pgTAP tooling and CI. There are no product migrations, Auth clients/proxy, command RPCs, storage policies, queue workers or admin endpoints. `docs/schema.sql` creates 42 reference tables only inside the rolled-back design test. It is not installed by `db:reset`.
+
+Keep Phase 1 small: migrate only identity/profile/control concerns with working grants and negative RLS tests. Do not generate all domain modules or 42 tables up front. Reuse ordinary functions and PostgreSQL transactions rather than introducing repository interfaces, workflow frameworks or event sourcing. Reference-only ledger/payout/queue models must be revisited against provider behavior when their phase starts.
+
+The review tightened default-deny testing, service-key rejection, provider-target validation, telemetry allowlisting, normalized reservations and transfer FKs, index coverage and worker lease design. See [review findings](phase-0-review.md). Security design is not equivalent to implemented security: RLS/grants/RPC boundaries and race tests are acceptance requirements of each future migration.
+
+## Readiness
+
+The foundation supports continued engineering, but Phase 1 is not yet approved under the agreed roadmap. Phase 0B still needs verified commit-bound previews, enforceable branch/release protection and staged delivery; full local Auth/email service health must be demonstrated before identity work. Paid plan/access decisions cannot be replaced by application code. Existing routine-PR auto-merge authorization remains compatible with checked merges; it does not enable production deployment.

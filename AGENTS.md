@@ -4,6 +4,8 @@
 
 Read README.md and the relevant docs before changing code. This is a production marketplace, not a demo. The foundation mission contains no product features. Future work must name its phase and satisfy that phase's definition of done. Keep architectural decisions explicit in docs/decisions.md. Preserve unrelated work. Use small branches named `codex/<purpose>`, pull requests, and review; never push directly to protected main.
 
+Routine in-scope Codex PRs are authorized for automatic squash merge after reviewing the diff and verifying all applicable CI checks on the exact latest head. Do not ask for repeated PR confirmation. Match the head commit when merging; never bypass checks, unresolved review requests or branch protections. This does not authorize paid plans, live financial operations or destructive production changes.
+
 ## Architecture
 
 One Next.js App Router application, strict TypeScript, pnpm, PostgreSQL/Supabase. Keep route handlers and Server Actions thin; put business use cases in server-only domain modules under src/modules when needed. Do not create speculative packages or a second admin application. `/admin` must have an independently enforced authorization boundary when implemented; a layout or hidden link is not authorization. Server Components by default. Add dependencies only with a concrete reason. Pin versions and commit pnpm-lock.yaml.
@@ -24,7 +26,7 @@ One Next.js App Router application, strict TypeScript, pnpm, PostgreSQL/Supabase
 
 ## Data and environments
 
-Never use production for development or tests. The existing remote project is protected until explicitly assigned. No remote schema/data mutations without identified target environment and reviewed migration plan. Use Supabase local for development. docs/schema.sql is a design reference, NOT an application migration. Never apply it to a shared database. Promote reviewed, additive migrations in small phases after testing reset, RLS and upgrade paths. Do not rewrite deployed migrations; expand/migrate/contract instead. Document backup/restore and rollback implications. No actual Stripe charges in foundation work; all future test work uses sandbox credentials. No real emails to unapproved recipients in nonproduction.
+Never use production for development or tests. The existing Flyco-app remote project is staging; flyco-production is production. No remote schema/data mutations without identified target environment and reviewed migration plan. Use Supabase local for development. docs/schema.sql is a design reference, NOT an application migration. Never apply it to a shared database. Promote reviewed, additive migrations in small phases after testing reset, RLS and upgrade paths. Do not rewrite deployed migrations; expand/migrate/contract instead. Document backup/restore and rollback implications. No actual Stripe charges in foundation work; all future test work uses sandbox credentials. No real emails to unapproved recipients in nonproduction.
 
 ## Quality
 
