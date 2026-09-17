@@ -1,0 +1,35 @@
+# Flyco product specification
+
+Status: foundation design, 2026-09-17. Product behavior below is planned, not implemented.
+
+## Purpose and scope
+
+Flyco connects senders with travelers already going between cities. France ↔ Morocco is the first route market. One verified account may send and travel; there are no permanent sender/traveler account types. A trip destination is not evidence of the traveler's residence or payout eligibility.
+
+V1 supports one traveler, one sender and one delivery request per booking. A request contains one or more declared items; all travel together. No partial fulfillment, multi-leg relay, auctions, dynamic AI pricing or algorithmic identity decisions. Each booking has one currency. French is the default, English and Arabic are required before public launch. Dates show the route city's IANA timezone; store absolute instants in UTC. Arabic requires RTL, logical spacing, bidi-isolated IDs, and native-language review.
+
+## Capabilities and acceptance boundaries
+
+| Area           | Planned behavior                                                        | Acceptance requirements                                                                                                      |
+| -------------- | ----------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| Authentication | Sign-up, verification, login/logout, recovery, profile/settings         | Verified email before publishing or transacting; safe redirects; generic recovery responses; revoked/suspended users blocked |
+| Trust          | Identity status, reviews, reports, moderation                           | KYC and Stripe capability checks are distinct; no raw identity docs exposed; appeals and manual review recorded              |
+| Trips          | Cities, departure/arrival, capacity, categories                         | Positive grams, ordered times, immutable booked terms, no overselling                                                        |
+| Requests       | Route, dates, item list, weight, dimensions, images, declaration, price | Eligibility and contents attestation; private sanitized photos; all items fit one trip                                       |
+| Matching       | Explainable ranked compatible trips                                     | Versioned deterministic filters; stale candidates rechecked on acceptance                                                    |
+| Booking        | Proposal, agreement, payment, pickup, transit, delivery, completion     | Named transition commands only; transaction locks; immutable terms and history                                               |
+| Messaging      | Private matched-party conversations                                     | Participants only, plain text, reportable, durable before realtime delivery                                                  |
+| Payments       | Collection, fee, transfer, payout, refund                               | Signed events, idempotency, ledger reconciliation; no fictional escrow promise                                               |
+| Delivery       | One-time handoff codes and evidence                                     | Codes hashed, expire, bounded attempts; atomic consume; no code in logs                                                      |
+| Notifications  | In-app and transactional email                                          | Durable outbox, retry/deduplication, preferences; SMS/push deferred                                                          |
+| Admin          | Verification, reports, disputes, transactions, users, audit             | MFA and scoped roles; reason recorded; no blanket staff read of private messages                                             |
+
+## Invariants
+
+No self-bookings or self-reviews. Only completed bookings produce reviews, one per author. A request cannot have two active accepted bookings. Capacity reservations expire; acceptance/payment races cannot confirm an over-capacity trip. Payment success does not by itself prove pickup/delivery. A refund does not erase delivery history. A dispute can remain open after fulfillment or payout. No object IDs grant authority.
+
+## Operational policy gates
+
+Before enabling real transactions: approve eligible/prohibited items by route and carrier; establish maximum dimensions/weight/value, customs declarations and responsibility, insurance and loss liability, user age/residency rules, identity threshold, fees/tax/currency, cancellation/refund/dispute windows, emergency support and moderation SLAs. These are business/legal decisions, not inferred engineering defaults. Commission numbers, automatic refunds and payout delays remain unset.
+
+Cross-border carriage and customs obligations need qualified review in both countries. Flyco must not imply all items accepted by the software are legally transportable. Do not launch unsupported traveler payouts. See decisions.md and payments.md.

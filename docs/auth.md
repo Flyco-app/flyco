@@ -1,0 +1,39 @@
+# Authentication and authorization
+
+Status: design only. No sign-in, profile or admin endpoints exist yet.
+
+## Identity
+
+Supabase Auth owns credentials and email verification; profiles.id references auth.users.id. One user may be sender and traveler concurrently. Neither is an administrative role. Disable anonymous sign-in. Require verified email before publishing, messaging or booking. Never authorize from editable user_metadata. Display profile changes cannot change account status or verification.
+
+Use @supabase/ssr request-scoped clients. Validate server identity with the documented getClaims/getUser flow; never trust getSession alone. Sensitive changes require a current server-validated user/session, live restriction checks and appropriate reauthentication. Refresh tokens in the Next proxy with response cookie propagation; use cookie adapters appropriate to their execution context. Do not swallow cookie-write errors. Do not cache personalized responses across users. Cookie Secure in HTTPS, SameSite=Lax, path=/ and host-only; use HttpOnly for cookies owned by server-only flows, respecting SSR SDK requirements for browser session access.
+
+Authentication callbacks use PKCE and a bounded allowlist of same-origin relative redirects. Reject protocol-relative URLs, encoded backslashes and unapproved return URLs. Auth errors must not reveal account existence. Recovery codes are single-use; password reset revokes other sessions according to approved policy. Enable custom SMTP after Resend domain verification; local emails go only to local Mailpit. Rate limit by IP and account fingerprint before invoking auth endpoints.
+
+## Role model
+
+| Role/capability       | Scope                                                                  |
+| --------------------- | ---------------------------------------------------------------------- |
+| Member                | Own profile/listings and bookings as either participant                |
+| Support               | Assigned support cases and minimal necessary booking data              |
+| Moderator             | Reports, content decisions and account restrictions; no finance writes |
+| Verification reviewer | Assigned identity cases; no payouts or unrelated conversations         |
+| Finance operator      | Payment/refund investigation and approved financial commands           |
+| Administrator         | Staff membership management, configuration, audited escalation         |
+| Worker                | Narrow machine role for one job, never a user-controlled credential    |
+
+Store staff_roles in private schema with grants/revocations and assigning actor. Sensitive role changes should require two-person review; bootstrap through audited operator procedure, never public signup. Require aal2/MFA for all admin access, short sessions and live DB role/restriction checks on every sensitive command. A role in an old JWT cannot preserve revoked staff authority.
+
+## Account restrictions
+
+Account state: active → restricted → suspended → closed, with authorized reinstatement from restricted/suspended only. Restricted capabilities are explicit; no new bookings when restricted, but allow safe access to existing dispute support where policy permits. Suspend/revoke sessions first; deleting auth.users alone does not invalidate existing JWTs. Every money/data mutation verifies current restriction state. Anonymization is a reviewed job; preserve legally required financial/audit references without retaining unnecessary PII.
+
+## Identity verification state machine
+
+Each provider attempt is immutable in identity_verifications; a current projection is server-managed. `not_started` is absence of an active attempt. New attempt: pending → requires_input | under_review | verified | rejected | cancelled. requires_input → pending | cancelled. under_review → requires_input | verified | rejected | cancelled. verified → expired | revoked. rejected/cancelled/expired/revoked are terminal for that attempt; retry creates another row. Expiry/revocation blocks newly restricted operations but does not erase booking history.
+
+Only verified provider events or assigned reviewers can transition; applicants can begin/cancel an unfinished attempt through an authorized command. Provider event uniqueness and version checks prevent stale events overwriting newer decisions. Store provider reference, timestamps, reason code and validity, not raw document contents. Stripe account capability readiness is separate from Flyco identity verification.
+
+## Tests before rollout
+
+Two users + anonymous + suspended + expired-token + revoked-staff + MFA/non-MFA identities. Cover email verification, tampered redirect, refresh race, logout/recovery, CSRF, profile ownership transfer attempts, role escalation via metadata, and cross-user reads. Test RLS through the Data API as well as through the application. No test requires production credentials.
