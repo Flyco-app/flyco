@@ -26,14 +26,15 @@ Open http://localhost:3000. Optional values may stay blank for the preparation p
 ## Supabase local setup
 
 ```sh
-pnpm db:start
+pnpm db:start:auth
+pnpm db:auth:check
 pnpm exec supabase status
 pnpm db:reset
 pnpm db:lint
 pnpm db:test
 ```
 
-Copy the local API URL/publishable key from local status into SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY in .env.local only when developing auth. Never copy a service-role/secret key into a public variable. Local Studio: http://127.0.0.1:55323; email inbox: http://127.0.0.1:55324. Keep local status credentials out of logs/issues. Stop with `pnpm db:stop`.
+Copy the local API URL/publishable key from local status into SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY in .env.local only when developing auth. Never copy a service-role/secret key into a public variable. The Auth development profile runs PostgreSQL, Auth, REST/gateway and Mailpit. Studio, Storage and Realtime are not started by this profile. The full stack remains available via `pnpm db:start` but its health is not yet verified on this host. Local email inbox: http://127.0.0.1:55324. Keep local status credentials out of logs/issues. Stop with `pnpm db:stop`.
 
 The existing remote project is **staging**. The separate **flyco-production** project is reserved for reviewed releases. Local validation rejects remote databases; hosted environment checks reject staging/production cross-use. No remote connection is needed for development.
 
@@ -55,7 +56,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 ```
 
-`pnpm db:start:database` starts only PostgreSQL for CI/schema work; `pnpm db:design:check` validates the reference schema and rolls it back.
+`pnpm db:start:database` starts only PostgreSQL for schema work; CI uses the Auth profile and tests email verification. When switching profiles, stop only Flyco first with `pnpm exec supabase stop --project-id flyco-local` (preserves volumes); starting an already-running database does not add the missing services. `pnpm db:design:check` validates the reference schema and rolls it back.
 
 `pnpm check` includes a production build; E2E launches that build. `pnpm test:watch` runs Vitest interactively. Database tests need local Docker/Supabase. `pnpm format` applies formatting. Check actual validation outcomes in [verification](docs/verification.md).
 
@@ -68,3 +69,7 @@ Private GitHub repository: [Flyco-app/flyco](https://github.com/Flyco-app/flyco)
 [Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
 
 Read [AGENTS.md](AGENTS.md) before future Codex work. Business launch blockers include supported Morocco-recipient payout arrangements, carriage/customs eligibility, liability, pricing/refund policy, identity/privacy rules and commercial hosting/recovery plans.
+
+## Free-plan development boundary
+
+No paid upgrades are authorized. Local/CI Phase 1 work can begin once the Auth infrastructure checks pass. Production remains disabled until enforceable release controls, supported commercial hosting, recovery and provider prerequisites are met. Free-plan review/merge discipline is a procedural control, not server-enforced branch protection. See [delivery status](docs/deployment.md).

@@ -34,6 +34,10 @@ Do not disable TS errors, weaken strict mode, use unjustified any, silence error
 
 Run `pnpm check`, `pnpm secrets:check` and relevant Playwright/DB tests before declaring work ready. Add tests proportional to risk; no fake coverage. Future schema changes require local pgTAP/RLS tests. CI and production approval rules must never be weakened to unblock delivery. Format all supported files. Keep documentation and env.example in sync. Use French/English/Arabic locale dictionaries and logical CSS for RTL; do not concatenate translated sentences. Accessibility target WCAG 2.2 AA.
 
+## Current budget and release boundary
+
+The owner requires free plans only: no paid upgrades, paid add-ons or billable resource creation. Earlier plan-upgrade approval was withdrawn. Local feature development may proceed after its local/CI prerequisites pass; paid-only hosting/protection/recovery controls remain production release blockers. Do not simulate enforcement or enable production deployment to work around plan limits.
+
 ## Production operations
 
 Do not create live charges, transfer funds, send messages, change billing plans or destructively modify infrastructure without task authorization. No mock success paths in production. Optional integrations fail explicitly if called without configuration. Reporting must distinguish configured, verified, planned and blocked. Document human-only decisions and operational launch gates; never invent completed service setup.

@@ -46,10 +46,12 @@ jobs:
           node-version-file: .node-version
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm db:start:database
+      # CLI startup output contains local test keys; never publish it as a log/artifact.
+      - run: pnpm db:start:auth > "$RUNNER_TEMP/flyco-local-start.log" 2>&1
       - run: pnpm db:reset
       - run: pnpm db:lint
       - run: pnpm db:test
       - run: pnpm db:design:check
+      - run: pnpm db:auth:check
       - run: pnpm db:stop
         if: always()

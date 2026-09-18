@@ -44,6 +44,8 @@ Keep Phase 1 small: migrate only identity/profile/control concerns with working 
 
 The review tightened default-deny testing, service-key rejection, provider-target validation, telemetry allowlisting, normalized reservations and transfer FKs, index coverage and worker lease design. See [review findings](phase-0-review.md). Security design is not equivalent to implemented security: RLS/grants/RPC boundaries and race tests are acceptance requirements of each future migration.
 
-## Readiness
+## Readiness under the free-plan constraint
 
-The foundation supports continued engineering, but Phase 1 is not yet approved under the agreed roadmap. Phase 0B still needs verified commit-bound previews, enforceable branch/release protection and staged delivery; full local Auth/email service health must be demonstrated before identity work. Paid plan/access decisions cannot be replaced by application code. Existing routine-PR auto-merge authorization remains compatible with checked merges; it does not enable production deployment.
+Phase 0A is verified. Phase 0B's local Auth/email prerequisites are tested through a scoped profile (PostgreSQL, gateway/REST, Auth and Mailpit); the full Storage/Realtime/Studio profile remains unresolved on this host. Phase 1A may begin locally after CI passes. No product functionality is introduced by these infrastructure tests.
+
+Hosted readiness is separate: exact-commit preview verification, staging delivery, monitoring access and enforceable branch/production controls remain open. No paid upgrades are authorized. Procedural reviewed merges on GitHub Free are not equivalent to protected branches; production deployment stays disabled. Future phases introduce their service dependencies only after independently testing them.
