@@ -20,3 +20,9 @@ Inspected 2026-09-17. No actual credential values are recorded here.
 - Sentry needs authenticated access to identify the correct project. Once connected, engineering can configure integrations and verify errors.
 
 See verification.md for actual commands/results, and deployment.md for enforced versus planned release controls.
+
+## Free-only continuation (2026-09-18)
+
+Owner withdrew paid-plan approval. No GitHub/Vercel/Supabase plan changed. GitHub remains Free; branch protections remain unavailable and private environment required-reviewers would require Enterprise, not Team. Production deployment remains disabled.
+
+The Flyco Auth development profile is healthy and its synthetic signup → local email → verification → login/logout smoke passed; all user operations used a publishable key and the fixture was removed with a local-only cleanup client. The full stack still has unresolved Storage/Realtime/Studio/metadata startup health failures. Vercel's team list works but project list is empty and `flyco` lookup returns 404. Browser Vercel/Sentry authentication was requested but not completed/verified; no replacement project or paid workaround was created.

@@ -43,10 +43,18 @@ Commercial Vercel plan, Supabase recovery plan, Stripe corridor/business approva
 
 ## Verified GitHub plan limitation
 
-The private organization repository is on Free. Main branch protection creation returned HTTP 403 (upgrade required). Required production environment reviewers returned HTTP 422 (billing plan unsupported). The production environment exists with a protected-branch policy only; this is NOT a working approval gate. Keep deployment disabled until branch protection and independent review are enforceable. Engineering will configure the rules after an appropriate organization-plan upgrade is approved; do not make source public to bypass this limitation.
+The private organization repository is on Free. Main branch protection creation returned HTTP 403 (upgrade required). Required production environment reviewers returned HTTP 422 (billing plan unsupported). The production environment exists with a protected-branch policy only; this is NOT a working approval gate. Keep deployment disabled until branch protection and independent review are enforceable. The owner has declined paid upgrades. Do not change plans or make source public. Team would enable private branch protection but would NOT enable required environment reviewers for this private repository; that feature requires Enterprise.
 
 ## Review correction: preview credentials and routine merges
 
 The manual smoke workflow does not receive any bypass secret. Playwright refuses a configured bypass secret: a `.vercel.app` suffix proves neither ownership nor the PR commit, and global request headers/traces could expose credentials. Phase 0B must verify deployment project/team/preview target/SHA through authenticated provider metadata before using an origin-scoped bypass mechanism; prevent cross-origin forwarding and secret-bearing artifacts. Protected previews remain unverified until that exists.
 
 The owner authorizes Codex to review and squash-merge routine in-scope PRs after all applicable checks pass on the exact head, without repeated confirmation. Do not bypass branch protections or unresolved reviews. This workflow preference does not grant paid-plan changes or production release approval; automatic production deployment remains disabled.
+
+## Free-plan Phase 0B status (2026-09-18)
+
+No plan was upgraded and no paid resource was created. Local development uses `pnpm db:start:auth`, then `pnpm db:auth:check`. This starts only services required for Phase 1A; it does not ignore health checks or claim Storage/Realtime/Studio are healthy. Switching from database-only mode requires a targeted stop first. Tests use a random synthetic account, a publishable key for all user operations, and a CLI-derived local secret key only to remove that exact fixture. The script rejects any non-loopback/wrong-port target, never reads app/provider credentials and logs neither sessions nor email bodies. Synthetic email remains solely in local Mailpit; its account is deleted. CI suppresses CLI startup output containing local keys.
+
+GitHub Free continues running PR checks; Codex reviews and merges the exact successful head under standing authorization. This is procedural discipline, not enforceable branch protection. Production stays disabled. Vercel and Sentry access remain unresolved; local Phase 1A work is allowed without representing either hosted service as ready. Hosted staging/preview deployment is deferred until accessible and confirmed compatible with the no-charge constraint.
+
+References: [GitHub environment feature availability](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments), [GitHub Team features](https://github.com/team).

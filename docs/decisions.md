@@ -41,3 +41,7 @@ No mobile app, microservices, split admin deployment, AI matching, PostGIS, SMS/
 ## Phase 0 senior review (2026-09-18)
 
 Keep the modular monolith and incremental migrations. Safe DTOs are not column authorization; use explicit grants/private data separation and reviewed narrow command privileges. PaymentIntent lifecycle includes retries after card failure; do not equate failure events with terminal payment attempts. Credentialed preview testing is disabled until deployment ownership and SHA verification exist. Routine PRs may be auto-merged by Codex after exact-head checks under the owner's standing authorization; production gates are unchanged. Details and remaining gates: [Phase 0 review](phase-0-review.md).
+
+## Free-plan delivery boundary (2026-09-18)
+
+Owner explicitly declined all paid upgrades. Separate local Phase 1 prerequisites from hosted release gates: verified Auth/Mailpit and CI allow local-only identity work, while production stays disabled and paid-only protections remain honestly documented. Introduce a smaller local Auth profile instead of requiring every future Supabase service to run before identity work. It does not waive full-stack service verification for later phases. No product feature is implemented in Phase 0B.

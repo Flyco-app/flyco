@@ -27,7 +27,9 @@
     "db:types": "supabase gen types typescript --local > src/lib/supabase/database.types.ts",
     "secrets:check": "node scripts/check-secrets.mjs",
     "db:design:check": "node scripts/check-schema.mjs",
-    "db:start:database": "supabase db start"
+    "db:start:database": "supabase db start",
+    "db:start:auth": "supabase start --exclude realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
+    "db:auth:check": "node scripts/check-local-auth.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.0",

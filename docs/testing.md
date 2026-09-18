@@ -31,3 +31,7 @@ Test fixtures are deterministic, synthetic and isolated by run. At least user A,
 ## Definition of verified
 
 Record command, result, target environment and limitations in docs/verification.md. A missing credential, provider outage or unavailable runtime is BLOCKED, not PASS. No skipLibCheck, ts-ignore, disabled rules, continue-on-error quality gates, or test-only production shortcuts to make the build green.
+
+## Local Auth infrastructure smoke
+
+`pnpm db:start:auth` then `pnpm db:auth:check` verifies the actual Supabase service and Mailpit connection, not Flyco UI. It requires loopback ports 55321/55324 and modern CLI-generated local keys. The test creates a random example.invalid account, proves email confirmation is required, consumes only its own Mailpit verification link, verifies login/identity/logout and removes that exact account in finally. No provider credentials, real recipients or production data are used. CI includes this check in the database job. Full Storage/Realtime/Studio startup and feature-specific RLS/SSR behavior remain separate unverified work.

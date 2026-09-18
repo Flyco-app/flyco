@@ -50,3 +50,9 @@ The initial [GitHub CI run](https://github.com/Flyco-app/flyco/actions/runs/3527
 | pnpm audit --prod                 | No known vulnerabilities reported by registry audit at review time; not proof of absence                                           |
 
 No runtime providers were contacted by product code and no remote schema was modified. Full-stack Auth/email health and deployed-preview/production release controls are still unverified; see [review](phase-0-review.md). GitHub CI must independently pass on the exact review PR head before automatic merge. The original test totals above are historical, not the current suite.
+
+## Free-plan continuation — 2026-09-18
+
+`pnpm db:start:auth` successfully started Flyco PostgreSQL, Kong/REST, Auth and Mailpit without ignoring health checks. The first smoke and the post-reset smoke both passed: signup, unverified-login rejection, email receipt in local Mailpit, confirmation, verified login, server identity and logout. The random synthetic Auth account was removed after each run. No external email was sent. The full Storage/Realtime/Studio/metadata profile still fails startup health on this host and is not represented as verified.
+
+Frozen install, `pnpm check` (format/lint/typecheck/37 unit tests/build), secret scan and 2 Chromium tests pass. Local reset/lint, 2 foundation pgTAP checks and 21 rolled-back schema checks pass. CI now uses the Auth profile and runs the smoke. No plan upgrades or paid resources were created; production remains disabled. Current readiness is local-only Phase 1A after exact-head CI; hosted gates remain open. This supersedes the earlier statement that all Phase 1 work must wait for paid delivery controls.
