@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: engineering foundation only.** The application displays a preparation page. Authentication, listings, bookings, matching, payments and admin features are designed but not implemented. No live payment or email action is performed.
+**Current scope: Phase 1A identity baseline.** Local Supabase Auth, email verification, login/logout, recovery, profile editing and account settings are implemented. Listings, bookings, matching, payments and admin features are not implemented. No live payment or external email action is performed.
 
 ## Architecture
 
@@ -21,7 +21,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open http://localhost:3000. Optional values may stay blank for the preparation page. APP_ENV defaults to local when blank. Do not put production credentials into this checkout.
+Open http://localhost:3000. APP_URL, SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are required to use authentication. APP_ENV defaults to local when blank. Do not put production credentials into this checkout.
 
 ## Supabase local setup
 
@@ -38,13 +38,13 @@ Copy the local API URL/publishable key from local status into SUPABASE_URL / SUP
 
 The existing remote project is **staging**. The separate **flyco-production** project is reserved for reviewed releases. Local validation rejects remote databases; hosted environment checks reject staging/production cross-use. No remote connection is needed for development.
 
-`docs/schema.sql` is a default-deny **design reference, not a migration**. Do not apply it to a shared database. Product migrations arrive incrementally with commands, RLS policies and tests. See [database design](docs/database.md).
+`docs/schema.sql` is a default-deny **design reference, not a migration**. Do not apply it to a shared database. The Phase 1A profiles migration is real and tested locally; the rest of the reference remains undeployed. Future migrations arrive incrementally with commands, RLS policies and tests. See [database design](docs/database.md).
 
 ## Environment configuration
 
 `.env.example` contains names and empty values only. Runtime schema lives in `src/lib/env/schema.ts`; server-only accessor in `server.ts`. Stripe/Resend clients throw if invoked without configuration. APP_ENV is local/preview/staging/production; hosted deployments require an HTTPS APP_URL. Supabase and email values are configured in pairs. Only modern sb_publishable_ Supabase keys are accepted; secret/service-role and legacy JWT keys are rejected. Stripe live credentials are rejected outside production and test credentials rejected in production. Provider secrets remain server-side. SENTRY_AUTH_TOKEN and Vercel tokens are CI/deployment credentials, not browser variables.
 
-No secrets are required to build the foundation. Configure sensitive hosted values via provider/GitHub environment settings once integrations are enabled. Never paste them into chat or commit them. See [deployment](docs/deployment.md) and [services](docs/services.md).
+No secrets are required for an unconfigured build; a configured Auth flow needs the local publishable key and APP_URL. Configure sensitive hosted values via provider/GitHub environment settings once integrations are enabled. Never paste them into chat or commit them. See [deployment](docs/deployment.md) and [services](docs/services.md).
 
 ## Checks
 
@@ -54,6 +54,8 @@ pnpm test:coverage
 pnpm secrets:check
 pnpm exec playwright install chromium
 pnpm test:e2e
+pnpm db:profile:check # local Auth profile required
+pnpm test:e2e:auth:local # local Auth profile + Mailpit required
 ```
 
 `pnpm db:start:database` starts only PostgreSQL for schema work; CI uses the Auth profile and tests email verification. When switching profiles, stop only Flyco first with `pnpm exec supabase stop --project-id flyco-local` (preserves volumes); starting an already-running database does not add the missing services. `pnpm db:design:check` validates the reference schema and rolls it back.
@@ -62,7 +64,7 @@ pnpm test:e2e
 
 ## Deployment
 
-Private GitHub repository: [Flyco-app/flyco](https://github.com/Flyco-app/flyco). Work through `codex/*` branches and PRs. CI runs lint/types/tests/build/local E2E and database guardrails. Planned required sequence: successful CI → exact-commit Vercel preview E2E → review → merge → protected production release. Automatic Git deployments are disabled until enforcement/setup is ready. Provisioning and plan constraints are recorded rather than hidden behind a green local test. No production schema or money movement is deployed by this foundation.
+Private GitHub repository: [Flyco-app/flyco](https://github.com/Flyco-app/flyco). Work through `codex/*` branches and PRs. CI runs lint/types/tests/build, local Auth E2E, Data API/RLS tests and database guardrails. Planned required sequence: successful CI → exact-commit Vercel preview E2E → review → merge → protected production release. Automatic Git deployments are disabled until enforcement/setup is ready. Provisioning and plan constraints are recorded rather than hidden behind a green local test. No production schema or money movement is deployed by this foundation.
 
 ## Engineering documentation
 

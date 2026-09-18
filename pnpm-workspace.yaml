@@ -6,3 +6,5 @@ allowBuilds:
   sharp: false
   unrs-resolver: false
 engineStrict: true
+patchedDependencies:
+  '@supabase/auth-js@2.116.0': patches/@supabase__auth-js@2.116.0.patch

@@ -22,7 +22,12 @@ try {
   const file = join(dir, 'schema.test.sql');
   writeFileSync(
     file,
-    reference.replace(/commit;\s*$/, () => `${tests}\nrollback;\n`),
+    reference
+      .replace(
+        /^begin;$/m,
+        'begin;\n-- Isolate the deployed Phase 1A slice inside this rolled-back reference check.\ndrop table if exists public.profiles cascade;',
+      )
+      .replace(/commit;\s*$/, () => `${tests}\nrollback;\n`),
   );
   const result = spawnSync(
     'pnpm',

@@ -4,7 +4,7 @@
 
 Use one Next.js App Router application at the repository root. A monorepo with apps/web, apps/admin and five shared packages would create multiple builds, deployments and abstraction boundaries before reuse exists. Keep UI, validation and integration code in clear modules; extract a pnpm workspace only when a second independently released application or worker needs shared code. pnpm-workspace.yaml currently configures dependency build permissions, not multiple packages.
 
-`src/app` owns routing and presentation. `src/components/ui` will contain source-owned shadcn primitives. `src/modules/<domain>` will own use cases, schemas and data access when the corresponding phase begins. `src/lib` is small infrastructure: environment validation, provider factories and monitoring. `src/lib/supabase` contains only a README; request-scoped Supabase clients do not exist yet. Do not put all business logic in lib or route handlers.
+`src/app` owns routing and presentation. `src/components/ui` will contain source-owned shadcn primitives. `src/modules/<domain>` will own use cases, schemas and data access when the corresponding phase begins. `src/lib` is small infrastructure: environment validation, provider factories and monitoring. `src/lib/supabase/server.ts` creates request-scoped, cookie-based Supabase clients for server actions and reads; `src/proxy.ts` refreshes sessions and applies nonce CSP. Do not put all business logic in lib or route handlers.
 
 The future `/admin` subtree is a distinct authorization surface inside the same deployment. Every server read/action must check live staff permissions and MFA; route/layout checks alone do not secure anything. It currently returns 404. Separate admin deployment is a later defense-in-depth option, not a substitute for permission checks.
 
@@ -24,7 +24,7 @@ Profiles contain display data only; private contact/pickup details live separate
 
 ## Frontend and localization
 
-Tailwind v4 and shadcn configuration are installed; add primitives as they are used. No unused product UI. Locale routing and dictionaries arrive with auth shell: `/fr`, `/en`, `/ar`; `/admin` can use a separate staff locale preference. Validate locales, render `<html lang dir>`, use Intl and logical CSS. No external font fetch in builds. Sentry server initialization is optional; browser monitoring/source-map upload are explicit later setup tasks.
+Tailwind v4 and shadcn configuration are installed; add primitives as they are used. No unused product UI. Phase 1A provides a small locale shell and dictionaries: `/fr`, `/en`, `/ar`; `/admin` can use a separate staff locale preference. Validate locales, render `<html lang dir>`, use Intl and logical CSS. No external font fetch in builds. Sentry server initialization is optional; browser monitoring/source-map upload are explicit later setup tasks.
 
 ## Scaling triggers
 
@@ -49,3 +49,7 @@ The review tightened default-deny testing, service-key rejection, provider-targe
 Phase 0A is verified. Phase 0B's local Auth/email prerequisites are tested through a scoped profile (PostgreSQL, gateway/REST, Auth and Mailpit); the full Storage/Realtime/Studio profile remains unresolved on this host. Phase 1A may begin locally after CI passes. No product functionality is introduced by these infrastructure tests.
 
 Hosted readiness is separate: exact-commit preview verification, staging delivery, monitoring access and enforceable branch/production controls remain open. No paid upgrades are authorized. Procedural reviewed merges on GitHub Free are not equivalent to protected branches; production deployment stays disabled. Future phases introduce their service dependencies only after independently testing them.
+
+## Phase 1A implementation
+
+`src/app/[locale]` contains FR/EN/AR account pages. `src/lib/auth` contains input schemas, copy, actions and server-side identity/profile gates. The only applied product migration is `supabase/migrations/20260918140320_phase_1a_profiles.sql`. Profiles are created on first verified session by the user-scoped client, avoiding a privileged Auth trigger. Concurrent first requests reread an already-created row. The `account_status` default and SQL column grants prevent a member from assigning their own status. Staff permissions, identity verification, listings, payments and `docs/schema.sql` remain design only. No remote schema was mutated on this branch.

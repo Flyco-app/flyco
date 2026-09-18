@@ -1,6 +1,6 @@
 # Database model and access design
 
-Status: reviewed design reference in [schema.sql](schema.sql), not a deployed product schema. The current migration directory remains product-empty. This prevents deploying table APIs without their authorization, transitions and tests. Promote vertical slices into versioned migrations during subsequent phases. No shared database was changed for schema design.
+Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory now contains only the Phase 1A `profiles` migration. This prevents deploying table APIs without their authorization, transitions and tests. Promote vertical slices into versioned migrations during subsequent phases. No shared database was changed for schema design.
 
 ## Conventions
 
@@ -128,3 +128,9 @@ Index review removed standalone indexes already covered by the leading columns o
 All 42 tables remain a future-domain map, not a Phase 1 migration plan. Phase 1A needs profiles and account_controls plus narrowly necessary authorization/audit support. Introduce queues, ledger, payouts and case tables only with their owning phases. No event-sourcing framework: tables hold current state, events record audit history.
 
 Capacity reservations contain only booking ID and hold lifecycle. Join to the immutable booking for trip/weight when summing capacity; acceptance and expiry both lock that trip. This removes redundant fields, a second weight authority and an unnecessary index.
+
+## Phase 1A applied slice
+
+`public.profiles(id → auth.users.id ON DELETE CASCADE, display_name, locale, account_status, created_at)` is the only migrated business table. `id` is both PK and FK; no redundant index is needed. `account_status` has a partial index for non-active operational lookups. Name, locale and status have CHECK constraints. RLS is enabled. `authenticated` has self SELECT; INSERT on id/display_name/locale only; UPDATE on display_name/locale only. Self INSERT requires active default, self UPDATE requires active old/new status. No member DELETE, owner transfer, or status write. `anon` has no table grant. Server identity checks require verified email and a fresh `getUser()` response; account status comes from the current DB row. pgTAP and direct local Data API tests cover owner, cross-user and anonymous access. Future public counterpart projections must use separate reviewed policies/DTOs.
+
+The reference `private.account_controls` has **not** been migrated: a single non-sensitive account status in `profiles` is sufficient for this slice and avoids a speculative privileged function or extra table. When staff moderation begins, migrate controls with an explicit transition/audit plan before enabling staff mutations.

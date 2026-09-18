@@ -1,6 +1,6 @@
 # Authentication and authorization
 
-Status: design only. No sign-in, profile or admin endpoints exist yet.
+Status: Phase 1A member sign-in/profile flows implemented locally; staff/admin authorization remains design only.
 
 ## Identity
 
@@ -37,3 +37,11 @@ Only verified provider events or assigned reviewers can transition; applicants c
 ## Tests before rollout
 
 Two users + anonymous + suspended + expired-token + revoked-staff + MFA/non-MFA identities. Cover email verification, tampered redirect, refresh race, logout/recovery, CSRF, profile ownership transfer attempts, role escalation via metadata, and cross-user reads. Test RLS through the Data API as well as through the application. No test requires production credentials.
+
+## Phase 1A implementation boundary
+
+Signup, sign-in, sign-out, recovery request, recovery completion, verified-email callback, profile/settings and email-change forms use Next Server Actions or a same-origin callback. Zod validates form fields. Supabase Auth owns passwords and confirmations; no password is stored by Flyco. The callback exchanges a one-time PKCE code and redirects only to a bounded local path using configured `APP_URL`; it never trusts an arbitrary URL. Password reset and login errors use account-neutral UI. Global sign-out revokes refresh sessions; existing access tokens may survive until the configured 15-minute expiry.
+
+The request-scoped SSR client uses host-only HttpOnly, SameSite=Lax cookies, Secure on hosted HTTPS. The proxy propagates refreshed cookies. `getUser()` and `email_confirmed_at` gate the server profile route/action, then the current RLS-protected profile row checks active status. No user_metadata field grants capability; `display_name` from signup metadata is revalidated and used only as initial self-owned presentation text. Users may change email through Supabase double-confirmation. The first verified request inserts a profile as the logged-in user under RLS; no service key or privileged Auth trigger handles user operations.
+
+Local Mailpit + Playwright prove signup, denied unverified login, confirmation, profile edit, sign-out, recovery and re-login. pgTAP/Data API tests prove self, other and anon access. The default Supabase email links use a PKCE verifier from the originating browser; cross-device confirmation requires a reviewed `token_hash` email template before hosted release. Distributed application-level auth throttling and hosted SMTP remain release gates; Supabase Auth frequency limits alone do not establish Flyco per-IP/account throttling.

@@ -1,37 +1,57 @@
-# Testing strategy
+# Authentication and authorization
 
-## Foundation commands
+Status: Phase 1A member sign-in/profile flows implemented locally; staff/admin authorization remains design only.
 
-- `pnpm format:check`, `pnpm lint`, `pnpm typecheck`: formatting, lint with zero warnings, strict type checking including library declarations.
-- `pnpm test` / `pnpm test:coverage`: Vitest unit tests for environment isolation and telemetry privacy. Coverage thresholds apply only to the implemented security configuration modules, not fictional business coverage.
-- `pnpm build` then `pnpm test:e2e`: Playwright launches the production build; checks French shell, headers, client errors and unavailable admin surface. Chromium baseline; add Firefox/WebKit/mobile/Arabic in UI phases.
-- `pnpm db:start`, `pnpm db:reset`, `pnpm db:lint`, `pnpm db:test`: local Supabase only. Initial pgTAP checks are schema-wide RLS/private-storage guardrails, not yet ownership-policy tests.
-- `pnpm secrets:check`: credential patterns and tracked environment-file guard.
+## Identity
 
-CI runs clean frozen installs, quality, coverage, build, local E2E and isolated local database checks. No cloud keys needed for these gates. Failures block merge once branch protections are available and configured. Exact deployed-preview E2E is a distinct gate; a local browser pass is not a preview pass.
+Supabase Auth owns credentials and email verification; profiles.id references auth.users.id. One user may be sender and traveler concurrently. Neither is an administrative role. Disable anonymous sign-in. Require verified email before publishing, messaging or booking. Never authorize from editable user_metadata. Display profile changes cannot change account status or verification.
 
-## Future test layers
+Use @supabase/ssr request-scoped clients. Validate server identity with the documented getClaims/getUser flow; never trust getSession alone. Sensitive changes require a current server-validated user/session, live restriction checks and appropriate reauthentication. Refresh tokens in the Next proxy with response cookie propagation; use cookie adapters appropriate to their execution context. Do not swallow cookie-write errors. Do not cache personalized responses across users. Cookie Secure in HTTPS, SameSite=Lax, path=/ and host-only; use HttpOnly for cookies owned by server-only flows, respecting SSR SDK requirements for browser session access.
 
-| Layer                        | Required evidence                                                                                                                              |
-| ---------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
-| Domain unit/property         | Every state edge and forbidden edge, matching filters/order, money bounds, timezone boundaries                                                 |
-| Database integration (pgTAP) | CHECK/unique/FK failures, RLS matrix, direct update denial, append-only history, immutable participants                                        |
-| Concurrency                  | Two independent DB sessions race for capacity, accept one request twice, consume same code, refund remaining balance, duplicate webhook worker |
-| Server integration (Vitest)  | Input parsing, session verification, authorization, safe DTO/errors, idempotency and provider timeout handling                                 |
-| Provider sandbox contract    | Signed fixtures and actual sandbox object reconciliation; separate credentials; no sends to real recipients                                    |
-| End-to-end (Playwright)      | Sign-up/verification/recovery, dual sender/traveler account, booking/delivery, Arabic RTL, keyboard access, admin denial and scoped review     |
-| Operational                  | Failed deployment rollback, migration upgrade, backup restore, alert delivery, stuck-job recovery, credential rotation                         |
+Authentication callbacks use PKCE and a bounded allowlist of same-origin relative redirects. Reject protocol-relative URLs, encoded backslashes and unapproved return URLs. Auth errors must not reveal account existence. Recovery codes are single-use; password reset revokes other sessions according to approved policy. Enable custom SMTP after Resend domain verification; local emails go only to local Mailpit. Rate limit by IP and account fingerprint before invoking auth endpoints.
 
-Test fixtures are deterministic, synthetic and isolated by run. At least user A, user B, unrelated user C, anonymous, restricted user, scoped staff and revoked staff. Never clone production PII. Test assertions must use API/DB truth, not screenshots alone. Test doubles may replace external network failures in unit tests but are clearly labeled; no provider fake exists in shipped app.
+## Role model
 
-## Database design validation
+| Role/capability       | Scope                                                                  |
+| --------------------- | ---------------------------------------------------------------------- |
+| Member                | Own profile/listings and bookings as either participant                |
+| Support               | Assigned support cases and minimal necessary booking data              |
+| Moderator             | Reports, content decisions and account restrictions; no finance writes |
+| Verification reviewer | Assigned identity cases; no payouts or unrelated conversations         |
+| Finance operator      | Payment/refund investigation and approved financial commands           |
+| Administrator         | Staff membership management, configuration, audited escalation         |
+| Worker                | Narrow machine role for one job, never a user-controlled credential    |
 
-`pnpm db:design:check` loads the reference only into the isolated local Supabase database inside a rolled-back transaction and runs eight pgTAP checks. The actual local auth schema is used; no shared database is touched. This is not equivalent to Supabase RLS behavioral validation. During feature implementation, test real Supabase JWT claims and role grants through pgTAP and API calls. Add counterexample tests for every authorization rule before enabling table access.
+Store staff_roles in private schema with grants/revocations and assigning actor. Sensitive role changes should require two-person review; bootstrap through audited operator procedure, never public signup. Require aal2/MFA for all admin access, short sessions and live DB role/restriction checks on every sensitive command. A role in an old JWT cannot preserve revoked staff authority.
 
-## Definition of verified
+## Account restrictions
 
-Record command, result, target environment and limitations in docs/verification.md. A missing credential, provider outage or unavailable runtime is BLOCKED, not PASS. No skipLibCheck, ts-ignore, disabled rules, continue-on-error quality gates, or test-only production shortcuts to make the build green.
+Account state: active → restricted → suspended → closed, with authorized reinstatement from restricted/suspended only. Restricted capabilities are explicit; no new bookings when restricted, but allow safe access to existing dispute support where policy permits. Suspend/revoke sessions first; deleting auth.users alone does not invalidate existing JWTs. Every money/data mutation verifies current restriction state. Anonymization is a reviewed job; preserve legally required financial/audit references without retaining unnecessary PII.
 
-## Local Auth infrastructure smoke
+## Identity verification state machine
 
-`pnpm db:start:auth` then `pnpm db:auth:check` verifies the actual Supabase service and Mailpit connection, not Flyco UI. It requires loopback ports 55321/55324 and modern CLI-generated local keys. The test creates a random example.invalid account, proves email confirmation is required, consumes only its own Mailpit verification link, verifies login/identity/logout and removes that exact account in finally. No provider credentials, real recipients or production data are used. CI includes this check in the database job. Full Storage/Realtime/Studio startup and feature-specific RLS/SSR behavior remain separate unverified work.
+Each provider attempt has an immutable identity/provider reference and versioned state in identity_verifications; transitions are audited and a current account_controls projection is updated in the same transaction. `not_started` is absence of an active attempt. New attempt: pending → requires_input | under_review | verified | rejected | cancelled. requires_input → pending | cancelled. under_review → requires_input | verified | rejected | cancelled. verified → expired | revoked. rejected/cancelled/expired/revoked are terminal for that attempt; retry creates another row. Expiry/revocation blocks newly restricted operations but does not erase booking history.
+
+Only verified provider events or assigned reviewers can transition; applicants can begin/cancel an unfinished attempt through an authorized command. Provider event uniqueness and version checks prevent stale events overwriting newer decisions. Store provider reference, timestamps, reason code and validity, not raw document contents. Stripe account capability readiness is separate from Flyco identity verification.
+
+## Tests before rollout
+
+Two users + anonymous + suspended + expired-token + revoked-staff + MFA/non-MFA identities. Cover email verification, tampered redirect, refresh race, logout/recovery, CSRF, profile ownership transfer attempts, role escalation via metadata, and cross-user reads. Test RLS through the Data API as well as through the application. No test requires production credentials.
+
+## Phase 1A implementation boundary
+
+Signup, sign-in, sign-out, recovery request, recovery completion, verified-email callback, profile/settings and email-change forms use Next Server Actions or a same-origin callback. Zod validates form fields. Supabase Auth owns passwords and confirmations; no password is stored by Flyco. The callback exchanges a one-time PKCE code and redirects only to a bounded local path using configured `APP_URL`; it never trusts an arbitrary URL. Password reset and login errors use account-neutral UI. Global sign-out revokes refresh sessions; existing access tokens may survive until the configured 15-minute expiry.
+
+The request-scoped SSR client uses host-only HttpOnly, SameSite=Lax cookies, Secure on hosted HTTPS. The proxy propagates refreshed cookies. `getUser()` and `email_confirmed_at` gate the server profile route/action, then the current RLS-protected profile row checks active status. No user_metadata field grants capability; `display_name` from signup metadata is revalidated and used only as initial self-owned presentation text. Users may change email through Supabase double-confirmation. The first verified request inserts a profile as the logged-in user under RLS; no service key or privileged Auth trigger handles user operations.
+
+Local Mailpit + Playwright prove signup, denied unverified login, confirmation, profile edit, sign-out, recovery and re-login. pgTAP/Data API tests prove self, other and anon access. The default Supabase email links use a PKCE verifier from the originating browser; cross-device confirmation requires a reviewed `token_hash` email template before hosted release. Distributed application-level auth throttling and hosted SMTP remain release gates; Supabase Auth frequency limits alone do not establish Flyco per-IP/account throttling.
+
+## Phase 1A security review
+
+Profile writes run with the member JWT; RLS and column grants deny IDOR, ownership transfer and account-status overposting even through direct PostgREST. The server checks verified identity via `getUser()` and live account status before profile changes. Recovery has a neutral public response and signs out globally after password change. Redirects are allowlisted and pinned to configured APP_URL. Next Server Actions supply same-origin enforcement; the GET callback changes only the Supabase session after validating its one-time code. No service-role key is loaded in app code. Only local synthetic tests use the local secret key and delete their fixtures.
+
+**Open before hosted release:** add a distributed per-IP/account/operation limiter; validate trusted proxy IP handling; configure reviewed cross-device email templates and custom SMTP; verify hosted cookies/CSP at the exact preview deployment; test account restriction behavior in a browser and session revocation timing. Phase 1A should remain local-only until these controls are implemented and reviewed.
+
+## Phase 1A local tests
+
+`pnpm db:reset && pnpm db:test` applies the real profile migration and runs pgTAP positive/negative RLS, grants and suspended-account cases. `pnpm db:profile:check` creates two synthetic verified local Auth users and checks REST/Data API ownership, anonymous denial and blocked status/ID writes. `pnpm test:e2e:auth:local` derives loopback-only keys from local CLI status, builds production output, and runs Playwright against local Auth/Mailpit; it cleans its synthetic user. The CI database job runs all three. The ordinary E2E job remains credential-free for the preparation shell and does not claim Auth coverage.

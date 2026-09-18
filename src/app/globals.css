@@ -28,3 +28,23 @@ body {
   color: var(--foreground);
   font-family: Arial, Helvetica, sans-serif;
 }
+
+.field {
+  display: block;
+  width: 100%;
+  margin-block-start: 0.4rem;
+  padding: 0.65rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+}
+.button {
+  padding: 0.7rem 1rem;
+  border-radius: var(--radius);
+  background: var(--primary);
+  color: var(--primary-foreground);
+  cursor: pointer;
+}
+a {
+  text-decoration: underline;
+  text-underline-offset: 0.2rem;
+}
