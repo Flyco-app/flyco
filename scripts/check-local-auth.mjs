@@ -116,12 +116,12 @@ try {
     .map((link) => new URL(link.replaceAll('&amp;', '&')))
     .find(
       (link) =>
-        link.origin === status.API_URL &&
-        link.pathname === '/auth/v1/verify' &&
+        link.origin === 'http://127.0.0.1:3000' &&
+        link.pathname === '/auth/confirm' &&
         link.searchParams.get('type') === 'signup',
     );
   assert.ok(confirmation, 'Expected local confirmation URL');
-  const token = confirmation.searchParams.get('token');
+  const token = confirmation.searchParams.get('token_hash');
   assert.ok(token, 'Missing confirmation token');
   step = 'email verification';
   const verified = await user.auth.verifyOtp({
