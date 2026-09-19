@@ -85,7 +85,6 @@ it.each([
   ['staging', 'mcmeroatheonlgxvveyl'],
   ['production', 'xivkbucvwsioxevlijzj'],
   ['preview', 'mcmeroatheonlgxvveyl'],
-  ['preview', 'xivkbucvwsioxevlijzj'],
 ])('rejects the wrong project for %s', (APP_ENV, ref) => {
   expect(() =>
     parseServerEnv({
@@ -100,6 +99,7 @@ it.each([
   ['staging', 'xivkbucvwsioxevlijzj'],
   ['production', 'mcmeroatheonlgxvveyl'],
   ['preview', 'isolated-fixture-branch'],
+  ['preview', 'xivkbucvwsioxevlijzj'],
 ])('accepts the designated %s project', (APP_ENV, ref) => {
   expect(
     parseServerEnv({

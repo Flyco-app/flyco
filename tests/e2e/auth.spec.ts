@@ -9,10 +9,13 @@ test.skip(
 const mailpit = process.env.E2E_MAILPIT_URL;
 const supabaseUrl = process.env.SUPABASE_URL;
 
-async function findMail(email: string, type: 'signup' | 'recovery') {
+async function findMail(
+  email: string,
+  type: 'signup' | 'recovery' | 'email_change',
+) {
   if (!mailpit || !supabaseUrl)
     throw new Error('Local mail environment unavailable');
-  for (let attempt = 0; attempt < 30; attempt++) {
+  for (let attempt = 0; attempt < 10; attempt++) {
     const list = (await fetch(
       `${mailpit}/api/v1/search?query=${encodeURIComponent(`to:${email}`)}`,
     ).then((r) => r.json())) as { messages?: { ID: string }[] };
@@ -26,8 +29,8 @@ async function findMail(email: string, type: 'signup' | 'recovery') {
         .map((s) => new URL(s.replaceAll('&amp;', '&')))
         .find(
           (link) =>
-            link.origin === supabaseUrl &&
-            link.pathname === '/auth/v1/verify' &&
+            link.origin === 'http://127.0.0.1:3000' &&
+            link.pathname === '/auth/confirm' &&
             link.searchParams.get('type') === type,
         );
       if (url) return url.href;
@@ -43,6 +46,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
   const email = `phase1-${randomUUID()}@example.invalid`;
   const password = `V3ryStrong-${randomUUID()}`;
   const replacement = `N3wStrong-${randomUUID()}`;
+  let changedEmail: string | undefined;
   let userId: string | undefined;
   const cspViolations: string[] = [];
   page.on('console', (message) => {
@@ -64,8 +68,42 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await page.getByLabel('Password').fill(password);
     await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page.getByRole('alert')).toBeVisible();
-    await page.goto(await findMail(email, 'signup'));
+    const signupLink = await findMail(email, 'signup');
+    const confirmationContext = await page.context().browser()!.newContext();
+    const confirmationPage = await confirmationContext.newPage();
+    await confirmationPage.goto(signupLink);
+    await confirmationPage
+      .getByRole('button', { name: 'Continue securely' })
+      .click();
+    await expect(confirmationPage).toHaveURL(/\/fr\/profile$/);
+    await confirmationContext.close();
+    await page.goto('/en/login');
+    await page.getByLabel('Email address').fill(email);
+    await page.getByLabel('Password').fill(password);
+    await page.getByRole('button', { name: 'Sign in' }).click();
     await expect(page).toHaveURL(/\/en\/profile$/);
+    if (
+      supabaseUrl &&
+      process.env.E2E_LOCAL_SECRET_KEY &&
+      process.env.SUPABASE_PUBLISHABLE_KEY
+    ) {
+      const admin = createClient(
+        supabaseUrl,
+        process.env.E2E_LOCAL_SECRET_KEY,
+        { auth: { persistSession: false, autoRefreshToken: false } },
+      );
+      const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
+      userId = data.users.find((user) => user.email === email)?.id;
+      expect(userId).toBeTruthy();
+    }
+    const replayContext = await page.context().browser()!.newContext();
+    const replayPage = await replayContext.newPage();
+    await replayPage.goto(signupLink);
+    await replayPage.getByRole('button', { name: 'Continue securely' }).click();
+    await expect(replayPage).toHaveURL(
+      /\/fr\/login\?error=confirmation-failed$/,
+    );
+    await replayContext.close();
     await expect(page.getByText('Test Member')).toBeVisible();
     await page.getByRole('link', { name: 'Account settings' }).click();
     await page.getByLabel('Display name').fill('Updated Member');
@@ -79,21 +117,43 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await page.getByLabel('Email address').fill(email);
     await page.getByRole('button', { name: 'Reset password' }).click();
     await expect(page).toHaveURL(/\/en\/check-email$/);
-    await page.goto(await findMail(email, 'recovery'));
-    await expect(page).toHaveURL(/\/en\/new-password$/);
-    await page.getByLabel('New password').fill(replacement);
-    await page.getByRole('button', { name: 'Save' }).click();
-    await expect(page).toHaveURL(/\/en\/login\?notice=password-updated$/);
-    await page.getByLabel('Email address').fill(email);
-    await page.getByLabel('Password').fill(replacement);
-    await page.getByRole('button', { name: 'Sign in' }).click();
+    const recoveryLink = await findMail(email, 'recovery');
+    const recoveryContext = await page.context().browser()!.newContext();
+    const recoveryPage = await recoveryContext.newPage();
+    await recoveryPage.goto(recoveryLink);
+    await recoveryPage
+      .getByRole('button', { name: 'Continue securely' })
+      .click();
+    await expect(recoveryPage).toHaveURL(/\/fr\/new-password$/);
+    page = recoveryPage;
+    await page.locator('input[name=password]').fill(replacement);
+    await page.locator('button[type=submit]').click();
+    await expect(page).toHaveURL(/\/fr\/login\?notice=password-updated$/);
+    await page.locator('input[name=email]').fill(email);
+    await page.locator('input[name=password]').fill(replacement);
+    await page.locator('button[type=submit]').click();
     await expect(page.getByText('Updated Member')).toBeVisible();
     await page.goto('/en/settings');
-    await page
-      .getByLabel('Email address')
-      .fill(`changed-${randomUUID()}@example.invalid`);
+    changedEmail = `changed-${randomUUID()}@example.invalid`;
+    await page.getByLabel('Email address').fill(changedEmail);
     await page.getByRole('button', { name: 'Email address' }).click();
     await expect(page).toHaveURL(/\/en\/check-email$/);
+    const newAddressLink = await findMail(changedEmail, 'email_change');
+    const oldAddressLink = await findMail(email, 'email_change');
+    expect(newAddressLink).not.toBe(oldAddressLink);
+    const firstChangeContext = await page.context().browser()!.newContext();
+    const firstChangePage = await firstChangeContext.newPage();
+    await firstChangePage.goto(oldAddressLink);
+    await firstChangePage
+      .getByRole('button', { name: 'Continue securely' })
+      .click();
+    await firstChangeContext.close();
+    const changeContext = await page.context().browser()!.newContext();
+    const changePage = await changeContext.newPage();
+    await changePage.goto(newAddressLink);
+    await changePage.getByRole('button', { name: 'Continue securely' }).click();
+    await expect(changePage).toHaveURL(/\/fr\/settings$/);
+    await changeContext.close();
     expect(cspViolations).toEqual([]);
   } finally {
     if (
@@ -108,7 +168,9 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       );
       if (!userId) {
         const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
-        userId = data.users.find((u) => u.email === email)?.id;
+        userId = data.users.find(
+          (user) => user.email === email || user.email === changedEmail,
+        )?.id;
       }
       if (userId) await admin.auth.admin.deleteUser(userId);
     }

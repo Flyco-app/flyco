@@ -58,3 +58,9 @@ No plan was upgraded and no paid resource was created. Local development uses `p
 GitHub Free continues running PR checks; Codex reviews and merges the exact successful head under standing authorization. This is procedural discipline, not enforceable branch protection. Production stays disabled. Vercel and Sentry access remain unresolved; local Phase 1A work is allowed without representing either hosted service as ready. Hosted staging/preview deployment is deferred until accessible and confirmed compatible with the no-charge constraint.
 
 References: [GitHub environment feature availability](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments), [GitHub Team features](https://github.com/team).
+
+## Phase 1A hosted Auth deployment
+
+The two Phase 1A migrations were applied to Supabase project `xivkbucvwsioxevlijzj` (staging) only. Production project `mcmeroatheonlgxvveyl` remains untouched. Staging must configure Site URL to the stable staging application origin and use only explicit Flyco preview/staging redirect origins; wildcards and production origins are not approved. Supabase Auth email templates must match the committed token-hash templates. SMTP uses a verified Resend sending subdomain, TLS, transactional credentials, and disabled click/open tracking. `APP_ENV=staging`, `APP_URL`, staging `SUPABASE_URL`, its publishable key, `AUTH_RATE_LIMIT_HMAC_SECRET`, optional staging `SENTRY_DSN`, and one-time `OBSERVABILITY_PROBE_SECRET` belong in Vercel Preview environment secrets. No secret uses `NEXT_PUBLIC_`.
+
+Hosted verification must use synthetic accounts and delete them afterward. It must record the immutable deployment URL and commit, confirmation/recovery/email-change delivery, replay denial, cookie/CSP/origin behavior, RLS through PostgREST, and the redacted Sentry probe. A preview deployment is not production and must not be promoted.

@@ -34,6 +34,8 @@ export const serverEnvSchema = z
     RESEND_API_KEY: optional(z.string().startsWith('re_')),
     RESEND_FROM_EMAIL: optional(z.email()),
     SENTRY_DSN: url,
+    AUTH_RATE_LIMIT_HMAC_SECRET: optional(z.string().min(32).max(256)),
+    OBSERVABILITY_PROBE_SECRET: optional(z.string().min(32).max(256)),
   })
   .superRefine((env, ctx) => {
     if (
@@ -65,9 +67,7 @@ export const serverEnvSchema = z
         (env.APP_ENV === 'staging' && host !== staging) ||
         (env.APP_ENV === 'production' && host !== production) ||
         (env.APP_ENV === 'preview' &&
-          (host === staging ||
-            host === production ||
-            !host.endsWith('.supabase.co')));
+          (host === production || !host.endsWith('.supabase.co')));
       if (invalid)
         ctx.addIssue({
           code: 'custom',

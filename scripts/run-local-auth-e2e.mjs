@@ -23,6 +23,7 @@ const env = {
   E2E_AUTH_LOCAL: '1',
   E2E_MAILPIT_URL: status.MAILPIT_URL,
   E2E_LOCAL_SECRET_KEY: status.SECRET_KEY,
+  AUTH_RATE_LIMIT_HMAC_SECRET: 'local-e2e-only-secret-with-32-chars-minimum',
 };
 const first = process.argv.includes('--check') ? 'check' : 'build';
 for (const args of [[first], ['test:e2e']]) {

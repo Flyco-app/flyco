@@ -1,8 +1,8 @@
 'use server';
 import { redirect } from 'next/navigation';
-import { getServerEnv } from '@/lib/env/server';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getVerifiedIdentity, requireActiveAccount } from './session';
+import { enforceAuthRateLimit } from './rate-limit';
 import {
   changePasswordSchema,
   emailSchema,
@@ -21,24 +21,21 @@ function getFields(form: FormData) {
     ]),
   );
 }
-function siteUrl() {
-  const { APP_URL } = getServerEnv();
-  if (!APP_URL)
-    throw new Error('APP_URL is required for email authentication.');
-  return APP_URL;
-}
-
 export async function signUp(form: FormData) {
   const parsed = signUpSchema.safeParse(getFields(form));
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   if (!parsed.success) redirect(`/${locale}/signup?error=invalid`);
   const { email, password, displayName } = parsed.data;
+  try {
+    await enforceAuthRateLimit('signup', { kind: 'account', value: email });
+  } catch {
+    redirect(`/${locale}/signup?error=failed`);
+  }
   const client = await createSupabaseServerClient();
   const { error } = await client.auth.signUp({
     email,
     password,
     options: {
-      emailRedirectTo: `${siteUrl()}/auth/callback?next=/${locale}/profile`,
       data: { display_name: displayName, locale },
     },
   });
@@ -50,6 +47,14 @@ export async function logIn(form: FormData) {
   const parsed = loginSchema.safeParse(getFields(form));
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   if (!parsed.success) redirect(`/${locale}/login?error=failed`);
+  try {
+    await enforceAuthRateLimit('login', {
+      kind: 'account',
+      value: parsed.data.email,
+    });
+  } catch {
+    redirect(`/${locale}/login?error=failed`);
+  }
   const client = await createSupabaseServerClient();
   const { error } = await client.auth.signInWithPassword({
     email: parsed.data.email,
@@ -71,14 +76,19 @@ export async function requestPasswordReset(form: FormData) {
   const parsed = resetRequestSchema.safeParse(getFields(form));
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   if (parsed.success) {
-    const client = await createSupabaseServerClient();
-    const { error } = await client.auth.resetPasswordForEmail(
-      parsed.data.email,
-      {
-        redirectTo: `${siteUrl()}/auth/callback?next=/${locale}/new-password`,
-      },
-    );
-    if (error) console.error('auth.reset.request_failed', error.code);
+    try {
+      await enforceAuthRateLimit('recovery', {
+        kind: 'account',
+        value: parsed.data.email,
+      });
+      const client = await createSupabaseServerClient();
+      const { error } = await client.auth.resetPasswordForEmail(
+        parsed.data.email,
+      );
+      if (error) console.error('auth.reset.request_failed', error.code);
+    } catch {
+      // Keep the response identical for unknown, rejected and rate-limited accounts.
+    }
   }
   // Uniform response for existing and unknown addresses.
   redirect(`/${locale}/check-email`);
@@ -125,10 +135,15 @@ export async function changeEmail(form: FormData) {
   const parsed = emailSchema.safeParse(form.get('email'));
   if (!parsed.success) redirect(`/${locale}/settings?error=invalid`);
   const { client } = await requireActiveAccount(locale);
-  const { error } = await client.auth.updateUser(
-    { email: parsed.data },
-    { emailRedirectTo: `${siteUrl()}/auth/callback?next=/${locale}/settings` },
-  );
+  try {
+    await enforceAuthRateLimit('email_change', {
+      kind: 'account',
+      value: parsed.data,
+    });
+  } catch {
+    redirect(`/${locale}/settings?error=failed`);
+  }
+  const { error } = await client.auth.updateUser({ email: parsed.data });
   if (error) redirect(`/${locale}/settings?error=failed`);
   redirect(`/${locale}/check-email`);
 }

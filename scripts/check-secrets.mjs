@@ -1,5 +1,5 @@
 import { execFileSync } from 'node:child_process';
-import { readFileSync, statSync } from 'node:fs';
+import { existsSync, readFileSync, statSync } from 'node:fs';
 
 const files = execFileSync(
   'git',
@@ -17,6 +17,9 @@ const patterns = [
 ];
 const failures = [];
 for (const file of files) {
+  // `git ls-files --cached` includes paths deleted in the working tree until
+  // the deletion is staged. Secret scanning must still work before commit.
+  if (!existsSync(file)) continue;
   if (/(^|\/)\.env(?:\.|$)/.test(file) && !file.endsWith('.env.example')) {
     failures.push(file);
     continue;

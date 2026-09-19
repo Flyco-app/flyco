@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1A identity baseline.** Local Supabase Auth, email verification, login/logout, recovery, profile editing and account settings are implemented. Listings, bookings, matching, payments and admin features are not implemented. No live payment or external email action is performed.
+**Current scope: Phase 1A identity baseline.** Local Supabase Auth, cross-browser token-hash email verification, login/logout, recovery, distributed auth throttling, profile editing and account settings are implemented; the two Phase 1A migrations are installed on staging. Listings, bookings, matching, payments and admin features are not implemented. No live payment or external email action is performed.
 
 ## Architecture
 
@@ -21,7 +21,7 @@ cp .env.example .env.local
 pnpm dev
 ```
 
-Open http://localhost:3000. APP_URL, SUPABASE_URL and SUPABASE_PUBLISHABLE_KEY are required to use authentication. APP_ENV defaults to local when blank. Do not put production credentials into this checkout.
+Open http://localhost:3000. APP_URL, SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY and hosted AUTH_RATE_LIMIT_HMAC_SECRET are required to use hosted authentication. APP_ENV defaults to local when blank. Do not put production credentials into this checkout.
 
 ## Supabase local setup
 
