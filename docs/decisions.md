@@ -8,7 +8,7 @@ Supabase Auth owns credentials and email verification; profiles.id references au
 
 Use @supabase/ssr request-scoped clients. Validate server identity with the documented getClaims/getUser flow; never trust getSession alone. Sensitive changes require a current server-validated user/session, live restriction checks and appropriate reauthentication. Refresh tokens in the Next proxy with response cookie propagation; use cookie adapters appropriate to their execution context. Do not swallow cookie-write errors. Do not cache personalized responses across users. Cookie Secure in HTTPS, SameSite=Lax, path=/ and host-only; use HttpOnly for cookies owned by server-only flows, respecting SSR SDK requirements for browser session access.
 
-Authentication callbacks use PKCE and a bounded allowlist of same-origin relative redirects. Reject protocol-relative URLs, encoded backslashes and unapproved return URLs. Auth errors must not reveal account existence. Recovery codes are single-use; password reset revokes other sessions according to approved policy. Enable custom SMTP after Resend domain verification; local emails go only to local Mailpit. Rate limit by IP and account fingerprint before invoking auth endpoints.
+Authentication email links use server-side `token_hash` verification and fixed destinations per OTP type. Reject protocol-relative URLs, encoded backslashes and unapproved return paths. Auth errors must not reveal account existence. Confirmation and recovery tokens are single-use; password reset revokes other sessions according to approved policy. Enable custom SMTP after Resend domain verification; local emails go only to local Mailpit. Rate limit by IP and account fingerprint before invoking Auth endpoints.
 
 ## Role model
 
