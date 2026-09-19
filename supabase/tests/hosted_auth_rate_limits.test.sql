@@ -1,0 +1,17 @@
+begin;
+create extension if not exists pgtap with schema extensions;
+select plan(10);
+select ok((select relrowsecurity and relforcerowsecurity from pg_class where oid='private.auth_rate_limits'::regclass),'Rate-limit table forces RLS');
+select ok(not has_table_privilege('anon','private.auth_rate_limits','SELECT,INSERT,UPDATE,DELETE'),'Anonymous role has no rate-limit table privileges');
+select ok(not has_table_privilege('authenticated','private.auth_rate_limits','SELECT,INSERT,UPDATE,DELETE'),'Member role has no rate-limit table privileges');
+select ok(has_function_privilege('anon','public.consume_auth_rate_limit(text,text)','EXECUTE'),'Anonymous callers can consume through wrapper');
+set local role anon;
+select is(public.consume_auth_rate_limit('signup',repeat('a',64)),true,'First signup attempt allowed');
+select is(public.consume_auth_rate_limit('signup',repeat('a',64)),true,'Second signup attempt allowed');
+select is(public.consume_auth_rate_limit('signup',repeat('a',64)),true,'Third signup attempt allowed');
+select is(public.consume_auth_rate_limit('signup',repeat('a',64)),true,'Fourth signup attempt allowed');
+select is(public.consume_auth_rate_limit('signup',repeat('a',64)),true,'Fifth signup attempt allowed');
+select is(public.consume_auth_rate_limit('signup',repeat('a',64)),false,'Sixth signup attempt denied atomically');
+reset role;
+select * from finish();
+rollback;
