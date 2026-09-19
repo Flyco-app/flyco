@@ -1,35 +1,53 @@
-# Security model
+# Authentication and authorization
 
-## Threat model
+Status: Phase 1A member sign-in/profile flows implemented locally; staff/admin authorization remains design only.
 
-Protect identities, addresses, item contents, messages, evidence and money from outsiders, malicious members, compromised accounts, excessive staff access and forged provider events. Untrusted boundaries: every browser payload, filename, webhook, realtime topic, redirect and admin form. A private repository is not a secret vault.
+## Identity
 
-## Implemented foundation controls
+Supabase Auth owns credentials and email verification; profiles.id references auth.users.id. One user may be sender and traveler concurrently. Neither is an administrative role. Disable anonymous sign-in. Require verified email before publishing, messaging or booking. Never authorize from editable user_metadata. Display profile changes cannot change account status or verification.
 
-Strict TypeScript/Zod, server-only provider factories, empty-value env template, ignored secrets/artifacts, local-only Supabase configuration with explicit grants required, no product API exposure, baseline security headers, privacy-filtered optional server Sentry, modern publishable-key-only validation and Vercel target checks, tests for configuration isolation/redaction, CI secret-pattern scan and lockfile. No service-role variable/client is present. Schema reference is default-deny and not a migration. These controls do not constitute finished product security.
+Use @supabase/ssr request-scoped clients. Validate server identity with the documented getClaims/getUser flow; never trust getSession alone. Sensitive changes require a current server-validated user/session, live restriction checks and appropriate reauthentication. Refresh tokens in the Next proxy with response cookie propagation; use cookie adapters appropriate to their execution context. Do not swallow cookie-write errors. Do not cache personalized responses across users. Cookie Secure in HTTPS, SameSite=Lax, path=/ and host-only; use HttpOnly for cookies owned by server-only flows, respecting SSR SDK requirements for browser session access.
 
-## Controls required before corresponding features
+Authentication callbacks use PKCE and a bounded allowlist of same-origin relative redirects. Reject protocol-relative URLs, encoded backslashes and unapproved return URLs. Auth errors must not reveal account existence. Recovery codes are single-use; password reset revokes other sessions according to approved policy. Enable custom SMTP after Resend domain verification; local emails go only to local Mailpit. Rate limit by IP and account fingerprint before invoking auth endpoints.
 
-- Verify session and authorize every server operation; owner checks in RLS and command transactions. Reject ownership/status/price/role overposting. Use SECURITY INVOKER by default and explicit column privileges. RLS tests include direct Data API access and negative identities.
-- Staff boundary: live revocable role grants, MFA aal2, least privilege, case assignment for private content, immutable audit trail and dual approval for sensitive finance/role changes. Never derive roles from user_metadata.
-- CSRF: same-origin Server Actions with Next origin checks, validated Origin on cookie-authenticated unsafe route handlers, SameSite cookies and CSRF tokens where browser context needs them. No state-changing GET. Provider webhooks use signatures instead of browser CSRF tokens. Never add broad allowedOrigins to bypass errors.
-- XSS: React escaping/plain-text messages; no dangerouslySetInnerHTML for user input, no executable SVG/HTML uploads, safe URL schemes, security headers. The current CSP blocks framing/objects/base abuse but is not a complete script policy. Before auth/product UI ships, implement nonce-based per-request script CSP (dynamic rendering), evaluate necessary Stripe/Supabase/Sentry origins and remove unsafe-inline/unsafe-eval in production. Test actual browser violations rather than merely header presence.
-- Rate limiting: distributed atomic counters (Postgres function initially; external store only when justified), composite IP/account/operation keys, server-derived trusted client IP, hashed short-lived IP identifiers. Auth 5/min/account and 30/min/IP, message 30/min/account, proposals 10/min/account, code attempts max 5/challenge are initial test settings pending abuse review. Return 429/Retry-After. Money/identity/code operations fail closed if limiter unavailable; public discovery may degrade under bounded caching. Supabase Auth limits and Vercel WAF supplement application limits.
-- Uploads: private buckets, size/MIME/magic-byte/pixel bounds, decode/re-encode + EXIF removal, scan quarantine, random object paths, no client-selected ownership, short-lived URLs and orphan cleanup. Presigned uploads are capability tokens; never log them. Shared metadata policies join resource ownership.
-- One-time codes: cryptographic random generation, hash/HMAC with server pepper, expiration, attempt counter, single-use transaction and reissue invalidation. Don't store or send code in audit/notification metadata.
-- Financial webhooks: raw-body signature, timestamp tolerance, provider account/mode check, unique event key, durable inbox before acknowledgement, retry/reconciliation. No trusting success URLs.
-- Realtime: private channels, membership checks at subscription and after revocation; do not expose identity/finance/audit tables. No messages in broadcast logs.
+## Role model
 
-## Data minimization / retention
+| Role/capability       | Scope                                                                  |
+| --------------------- | ---------------------------------------------------------------------- |
+| Member                | Own profile/listings and bookings as either participant                |
+| Support               | Assigned support cases and minimal necessary booking data              |
+| Moderator             | Reports, content decisions and account restrictions; no finance writes |
+| Verification reviewer | Assigned identity cases; no payouts or unrelated conversations         |
+| Finance operator      | Payment/refund investigation and approved financial commands           |
+| Administrator         | Staff membership management, configuration, audited escalation         |
+| Worker                | Narrow machine role for one job, never a user-controlled credential    |
 
-Prefer identity provider references to documents. Exact pickup/address details only after authorized booking stage. Strip personal data from telemetry. Define retention by class with legal review: operational messages/evidence, verification records, financial audit and deletion requests have different obligations. Do not invent a statutory retention number. Separate public profile display from private contacts; remove/anonymize non-required data on account closure while preserving lawful audit relationships. Document subprocessors, data residency, consent and breach procedure before launch.
+Store staff_roles in private schema with grants/revocations and assigning actor. Sensitive role changes should require two-person review; bootstrap through audited operator procedure, never public signup. Require aal2/MFA for all admin access, short sessions and live DB role/restriction checks on every sensitive command. A role in an old JWT cannot preserve revoked staff authority.
 
-## Secrets / supply chain
+## Account restrictions
 
-Vercel sensitive environment variables and GitHub protected environment secrets; separate credentials per environment. Build-time Sentry auth token never becomes a runtime/public variable. Restricted Stripe keys preferred. Authenticated workloads should use workload identity where supported. Review dependency updates and lifecycle scripts; pnpm allowBuilds lists intentional allow/deny entries. Lightweight repository scanner is a guardrail, not proof of no secrets; enable GitHub secret scanning/push protection if plan allows and use history-aware scanning before release. Rotate any exposed secret, remove access, and investigate; deleting a file alone is insufficient.
+Account state: active → restricted → suspended → closed, with authorized reinstatement from restricted/suspended only. Restricted capabilities are explicit; no new bookings when restricted, but allow safe access to existing dispute support where policy permits. Suspend/revoke sessions first; deleting auth.users alone does not invalidate existing JWTs. Every money/data mutation verifies current restriction state. Anonymization is a reviewed job; preserve legally required financial/audit references without retaining unnecessary PII.
 
-## Incident response
+## Identity verification state machine
 
-On suspected compromise: suspend relevant capability, revoke sessions/keys, preserve redacted audit evidence, reconcile payments, notify designated incident owner, determine reporting duties, fix and regression-test, review incident. Document runbooks for compromised member/staff, payment mismatch, malicious upload and provider outage. Recovery tests must establish actual RPO/RTO; proposed launch targets RPO ≤24h and RTO ≤4h require business acceptance and a suitable backup plan, not current guarantees.
+Each provider attempt has an immutable identity/provider reference and versioned state in identity_verifications; transitions are audited and a current account_controls projection is updated in the same transaction. `not_started` is absence of an active attempt. New attempt: pending → requires_input | under_review | verified | rejected | cancelled. requires_input → pending | cancelled. under_review → requires_input | verified | rejected | cancelled. verified → expired | revoked. rejected/cancelled/expired/revoked are terminal for that attempt; retry creates another row. Expiry/revocation blocks newly restricted operations but does not erase booking history.
 
-Source: [Supabase RLS](https://supabase.com/docs/guides/database/postgres/row-level-security), [private storage](https://supabase.com/docs/guides/storage/buckets/fundamentals), [Next CSP](https://nextjs.org/docs/app/guides/content-security-policy), [Stripe webhook security](https://docs.stripe.com/webhooks).
+Only verified provider events or assigned reviewers can transition; applicants can begin/cancel an unfinished attempt through an authorized command. Provider event uniqueness and version checks prevent stale events overwriting newer decisions. Store provider reference, timestamps, reason code and validity, not raw document contents. Stripe account capability readiness is separate from Flyco identity verification.
+
+## Tests before rollout
+
+Two users + anonymous + suspended + expired-token + revoked-staff + MFA/non-MFA identities. Cover email verification, tampered redirect, refresh race, logout/recovery, CSRF, profile ownership transfer attempts, role escalation via metadata, and cross-user reads. Test RLS through the Data API as well as through the application. No test requires production credentials.
+
+## Phase 1A implementation boundary
+
+Signup, sign-in, sign-out, recovery request, recovery completion, verified-email callback, profile/settings and email-change forms use Next Server Actions or a same-origin callback. Zod validates form fields. Supabase Auth owns passwords and confirmations; no password is stored by Flyco. The callback exchanges a one-time PKCE code and redirects only to a bounded local path using configured `APP_URL`; it never trusts an arbitrary URL. Password reset and login errors use account-neutral UI. Global sign-out revokes refresh sessions; existing access tokens may survive until the configured 15-minute expiry.
+
+The request-scoped SSR client uses host-only HttpOnly, SameSite=Lax cookies, Secure on hosted HTTPS. The proxy propagates refreshed cookies. `getUser()` and `email_confirmed_at` gate the server profile route/action, then the current RLS-protected profile row checks active status. No user_metadata field grants capability; `display_name` from signup metadata is revalidated and used only as initial self-owned presentation text. Users may change email through Supabase double-confirmation. The first verified request inserts a profile as the logged-in user under RLS; no service key or privileged Auth trigger handles user operations.
+
+Local Mailpit + Playwright prove signup, denied unverified login, confirmation, profile edit, sign-out, recovery and re-login. pgTAP/Data API tests prove self, other and anon access. The default Supabase email links use a PKCE verifier from the originating browser; cross-device confirmation requires a reviewed `token_hash` email template before hosted release. Distributed application-level auth throttling and hosted SMTP remain release gates; Supabase Auth frequency limits alone do not establish Flyco per-IP/account throttling.
+
+## Phase 1A security review
+
+Profile writes run with the member JWT; RLS and column grants deny IDOR, ownership transfer and account-status overposting even through direct PostgREST. The server checks verified identity via `getUser()` and live account status before profile changes. Recovery has a neutral public response and signs out globally after password change. Redirects are allowlisted and pinned to configured APP_URL. Next Server Actions supply same-origin enforcement; the GET callback changes only the Supabase session after validating its one-time code. No service-role key is loaded in app code. Only local synthetic tests use the local secret key and delete their fixtures.
+
+**Open before hosted release:** add a distributed per-IP/account/operation limiter; validate trusted proxy IP handling; configure reviewed cross-device email templates and custom SMTP; verify hosted cookies/CSP at the exact preview deployment; test account restriction behavior in a browser and session revocation timing. Phase 1A should remain local-only until these controls are implemented and reviewed.

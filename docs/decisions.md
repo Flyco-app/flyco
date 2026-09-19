@@ -1,47 +1,69 @@
-# Decision register
+# Authentication and authorization
 
-## Accepted engineering decisions
+Status: Phase 1A member sign-in/profile flows implemented locally; staff/admin authorization remains design only.
 
-| ID  | Decision                                                                    | Reason / reconsider when                                                                                                                        |
-| --- | --------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| A01 | Single modular Next.js app; secured admin subtree later                     | Small operational surface; extract only on independent deployment need                                                                          |
-| A02 | SQL migrations + generated types, no ORM                                    | Native constraints/RLS/transaction control; fewer overlapping schemas                                                                           |
-| A03 | Separate fulfillment, collections, refunds, transfers, payouts and disputes | Avoid invalid combined status graph and preserve audit history                                                                                  |
-| A04 | Exact canonical city matching, deterministic lexicographic ranking          | Explainable V1; no LLM or geospatial dependency                                                                                                 |
-| A05 | One traveler/request per booking, all request items together                | Bounded capacity/payment/dispute ownership; multi-leg materially changes schema                                                                 |
-| A06 | Private sensitive schemas/buckets, explicit DTOs and least-privilege grants | Prevent discovery/Realtime leaks                                                                                                                |
-| A07 | Database inbox/outbox + transaction locks and idempotency                   | Durable recovery across independent providers                                                                                                   |
-| A08 | EU West staging/production; local Docker for development                    | Current region alignment; residency requires legal approval                                                                                     |
-| A09 | GitHub Flyco-app/flyco private                                              | User-selected organization; private production source                                                                                           |
-| A10 | Existing Supabase is staging; separate flyco-production created             | User-approved environment separation and $0/month provisioning quote                                                                            |
-| A11 | Flyco Stripe test mode selected, no live actions                            | User selection; separate sandbox not used                                                                                                       |
-| A12 | Framework latest stable; compatible pinned tooling                          | Next 16.3.5 verified; TypeScript 7 incompatible with current TS lint parser; ESLint 10 peers unsupported by Next's current React/import plugins |
+## Identity
 
-A12 carries a tooling maintenance risk: ESLint 9 is the compatible line but upstream marks it unsupported. Track Next/plugin compatibility and upgrade as soon as supported; do not suppress peer warnings or replace security checks with silent skips.
+Supabase Auth owns credentials and email verification; profiles.id references auth.users.id. One user may be sender and traveler concurrently. Neither is an administrative role. Disable anonymous sign-in. Require verified email before publishing, messaging or booking. Never authorize from editable user_metadata. Display profile changes cannot change account status or verification.
 
-## Decisions requiring owner/business input before dependent work
+Use @supabase/ssr request-scoped clients. Validate server identity with the documented getClaims/getUser flow; never trust getSession alone. Sensitive changes require a current server-validated user/session, live restriction checks and appropriate reauthentication. Refresh tokens in the Next proxy with response cookie propagation; use cookie adapters appropriate to their execution context. Do not swallow cookie-write errors. Do not cache personalized responses across users. Cookie Secure in HTTPS, SameSite=Lax, path=/ and host-only; use HttpOnly for cookies owned by server-only flows, respecting SSR SDK requirements for browser session access.
 
-| Priority | Decision                                                                  | Expensive consequence / recommended next step                                                     |
-| -------- | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------- |
-| Blocker  | Flyco incorporation/platform country; traveler residence/bank eligibility | Determines Connect availability and legal responsibility; obtain Stripe written corridor approval |
-| Blocker  | Customs/carrier restrictions and eligible item categories/value/weight    | Determines matching/acceptance, liability and compliance; approve route-specific rulebook         |
-| Blocker  | Merchant-of-record, losses/fees/taxes, payout/hold policy                 | Changes funds flow and ledger; confirm with Stripe and qualified advisers                         |
-| High     | Commission/currency, payment timing and booking horizon                   | Snapshot pricing/FX/cancellation terms; propose EUR-only pilot but not approved                   |
-| High     | Cancellation, returns, delivery acceptance, disputes and refund windows   | Controls transitions, deadlines and reconciliation compensation                                   |
-| High     | Insurance and loss/damage liability; traveler eligibility/age             | Changes claims, terms, verification requirements and support burden                               |
-| High     | Identity provider and data/retention policy                               | Avoid storing documents prematurely; assess GDPR/local privacy needs                              |
-| High     | Hosting/recovery budget and operational owner                             | Approve commercial Vercel plan and reliable Supabase backups/restore targets                      |
-| Medium   | Domain, transactional sender identity and brand/localized copy            | Needed for DNS verification, Auth redirects, emails and native Arabic QA                          |
-| Medium   | Admin assignees, escalation and dual-approval thresholds                  | Needed before exposing moderation/finance actions                                                 |
+Authentication callbacks use PKCE and a bounded allowlist of same-origin relative redirects. Reject protocol-relative URLs, encoded backslashes and unapproved return URLs. Auth errors must not reveal account existence. Recovery codes are single-use; password reset revokes other sessions according to approved policy. Enable custom SMTP after Resend domain verification; local emails go only to local Mailpit. Rate limit by IP and account fingerprint before invoking auth endpoints.
 
-## Deferred deliberately
+## Role model
 
-No mobile app, microservices, split admin deployment, AI matching, PostGIS, SMS/push, multi-leg delivery, multiple settlement currencies or general-purpose workflow framework. This does not prevent adding them later; each needs a concrete product requirement and migration/design review.
+| Role/capability       | Scope                                                                  |
+| --------------------- | ---------------------------------------------------------------------- |
+| Member                | Own profile/listings and bookings as either participant                |
+| Support               | Assigned support cases and minimal necessary booking data              |
+| Moderator             | Reports, content decisions and account restrictions; no finance writes |
+| Verification reviewer | Assigned identity cases; no payouts or unrelated conversations         |
+| Finance operator      | Payment/refund investigation and approved financial commands           |
+| Administrator         | Staff membership management, configuration, audited escalation         |
+| Worker                | Narrow machine role for one job, never a user-controlled credential    |
 
-## Phase 0 senior review (2026-09-18)
+Store staff_roles in private schema with grants/revocations and assigning actor. Sensitive role changes should require two-person review; bootstrap through audited operator procedure, never public signup. Require aal2/MFA for all admin access, short sessions and live DB role/restriction checks on every sensitive command. A role in an old JWT cannot preserve revoked staff authority.
 
-Keep the modular monolith and incremental migrations. Safe DTOs are not column authorization; use explicit grants/private data separation and reviewed narrow command privileges. PaymentIntent lifecycle includes retries after card failure; do not equate failure events with terminal payment attempts. Credentialed preview testing is disabled until deployment ownership and SHA verification exist. Routine PRs may be auto-merged by Codex after exact-head checks under the owner's standing authorization; production gates are unchanged. Details and remaining gates: [Phase 0 review](phase-0-review.md).
+## Account restrictions
 
-## Free-plan delivery boundary (2026-09-18)
+Account state: active → restricted → suspended → closed, with authorized reinstatement from restricted/suspended only. Restricted capabilities are explicit; no new bookings when restricted, but allow safe access to existing dispute support where policy permits. Suspend/revoke sessions first; deleting auth.users alone does not invalidate existing JWTs. Every money/data mutation verifies current restriction state. Anonymization is a reviewed job; preserve legally required financial/audit references without retaining unnecessary PII.
 
-Owner explicitly declined all paid upgrades. Separate local Phase 1 prerequisites from hosted release gates: verified Auth/Mailpit and CI allow local-only identity work, while production stays disabled and paid-only protections remain honestly documented. Introduce a smaller local Auth profile instead of requiring every future Supabase service to run before identity work. It does not waive full-stack service verification for later phases. No product feature is implemented in Phase 0B.
+## Identity verification state machine
+
+Each provider attempt has an immutable identity/provider reference and versioned state in identity_verifications; transitions are audited and a current account_controls projection is updated in the same transaction. `not_started` is absence of an active attempt. New attempt: pending → requires_input | under_review | verified | rejected | cancelled. requires_input → pending | cancelled. under_review → requires_input | verified | rejected | cancelled. verified → expired | revoked. rejected/cancelled/expired/revoked are terminal for that attempt; retry creates another row. Expiry/revocation blocks newly restricted operations but does not erase booking history.
+
+Only verified provider events or assigned reviewers can transition; applicants can begin/cancel an unfinished attempt through an authorized command. Provider event uniqueness and version checks prevent stale events overwriting newer decisions. Store provider reference, timestamps, reason code and validity, not raw document contents. Stripe account capability readiness is separate from Flyco identity verification.
+
+## Tests before rollout
+
+Two users + anonymous + suspended + expired-token + revoked-staff + MFA/non-MFA identities. Cover email verification, tampered redirect, refresh race, logout/recovery, CSRF, profile ownership transfer attempts, role escalation via metadata, and cross-user reads. Test RLS through the Data API as well as through the application. No test requires production credentials.
+
+## Phase 1A implementation boundary
+
+Signup, sign-in, sign-out, recovery request, recovery completion, verified-email callback, profile/settings and email-change forms use Next Server Actions or a same-origin callback. Zod validates form fields. Supabase Auth owns passwords and confirmations; no password is stored by Flyco. The callback exchanges a one-time PKCE code and redirects only to a bounded local path using configured `APP_URL`; it never trusts an arbitrary URL. Password reset and login errors use account-neutral UI. Global sign-out revokes refresh sessions; existing access tokens may survive until the configured 15-minute expiry.
+
+The request-scoped SSR client uses host-only HttpOnly, SameSite=Lax cookies, Secure on hosted HTTPS. The proxy propagates refreshed cookies. `getUser()` and `email_confirmed_at` gate the server profile route/action, then the current RLS-protected profile row checks active status. No user_metadata field grants capability; `display_name` from signup metadata is revalidated and used only as initial self-owned presentation text. Users may change email through Supabase double-confirmation. The first verified request inserts a profile as the logged-in user under RLS; no service key or privileged Auth trigger handles user operations.
+
+Local Mailpit + Playwright prove signup, denied unverified login, confirmation, profile edit, sign-out, recovery and re-login. pgTAP/Data API tests prove self, other and anon access. The default Supabase email links use a PKCE verifier from the originating browser; cross-device confirmation requires a reviewed `token_hash` email template before hosted release. Distributed application-level auth throttling and hosted SMTP remain release gates; Supabase Auth frequency limits alone do not establish Flyco per-IP/account throttling.
+
+## Phase 1A security review
+
+Profile writes run with the member JWT; RLS and column grants deny IDOR, ownership transfer and account-status overposting even through direct PostgREST. The server checks verified identity via `getUser()` and live account status before profile changes. Recovery has a neutral public response and signs out globally after password change. Redirects are allowlisted and pinned to configured APP_URL. Next Server Actions supply same-origin enforcement; the GET callback changes only the Supabase session after validating its one-time code. No service-role key is loaded in app code. Only local synthetic tests use the local secret key and delete their fixtures.
+
+**Open before hosted release:** add a distributed per-IP/account/operation limiter; validate trusted proxy IP handling; configure reviewed cross-device email templates and custom SMTP; verify hosted cookies/CSP at the exact preview deployment; test account restriction behavior in a browser and session revocation timing. Phase 1A should remain local-only until these controls are implemented and reviewed.
+
+## Phase 1A local tests
+
+`pnpm db:reset && pnpm db:test` applies the real profile migration and runs pgTAP positive/negative RLS, grants and suspended-account cases. `pnpm db:profile:check` creates two synthetic verified local Auth users and checks REST/Data API ownership, anonymous denial and blocked status/ID writes. `pnpm test:e2e:auth:local` derives loopback-only keys from local CLI status, builds production output, and runs Playwright against local Auth/Mailpit; it cleans its synthetic user. The CI database job runs all three. The ordinary E2E job remains credential-free for the preparation shell and does not claim Auth coverage.
+
+## Phase 1A branch status
+
+Implemented locally on `codex/phase-1a-auth-profiles`: member Auth, profile RLS and localized account shell. The phase is not a hosted release: distributed abuse controls, reviewed cross-device email templates and exact-preview verification remain open. Phase 1B staff authorization and all listing work remain separate.
+
+## Phase 1A decisions
+
+| ID  | Decision                                                          | Reason / reconsider when                                                                                    |
+| --- | ----------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| A13 | Create profiles on first verified server session under member RLS | Avoids privileged Auth trigger; revisit if immediate pre-verification profile creation becomes required     |
+| A14 | Keep account status in profiles with column grants for this slice | Avoids separate control table/RPC until moderation; migrate with audit/transition plan before staff actions |
+| A15 | Use PKCE SSR cookies and one app-local callback                   | Smallest secure current-browser flow; cross-device email template is a hosted release gate                  |

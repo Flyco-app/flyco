@@ -8,7 +8,11 @@ export default defineConfig({
     include: ['tests/unit/**/*.test.ts'],
     coverage: {
       provider: 'v8',
-      include: ['src/lib/env/schema.ts', 'src/lib/observability/options.ts'],
+      include: [
+        'src/lib/env/schema.ts',
+        'src/lib/observability/options.ts',
+        'src/lib/auth/validation.ts',
+      ],
       thresholds: { lines: 90, functions: 100, statements: 90, branches: 85 },
     },
   },

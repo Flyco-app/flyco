@@ -1,4 +1,5 @@
 import type { Metadata } from 'next';
+import { headers } from 'next/headers';
 import './globals.css';
 
 export const metadata: Metadata = {
@@ -7,11 +8,12 @@ export const metadata: Metadata = {
   robots: { index: false, follow: false },
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{ children: React.ReactNode }>) {
+  const locale = (await headers()).get('x-flyco-locale') ?? 'fr';
   return (
-    <html lang="fr" dir="ltr">
+    <html lang={locale} dir={locale === 'ar' ? 'rtl' : 'ltr'}>
       <body>{children}</body>
     </html>
   );
