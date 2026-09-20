@@ -6,8 +6,10 @@ import {
 } from '@/lib/auth/confirmation';
 import { enforceAuthRateLimit } from '@/lib/auth/rate-limit';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
+import { assertTrustedServerActionOrigin } from '@/lib/auth/origin';
 
 export async function confirmEmailToken(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const parsed = confirmationSchema.safeParse({
     token_hash: form.get('token_hash'),
     type: form.get('type'),
