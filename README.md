@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1A identity baseline.** Local Supabase Auth, cross-browser token-hash email verification, login/logout, recovery, distributed auth throttling, profile editing and account settings are implemented; the two Phase 1A migrations are installed on staging. Listings, bookings, matching, payments and admin features are not implemented. No live payment or external email action is performed.
+**Current scope: Phase 1A identity baseline.** Supabase Auth, cross-browser token-hash email verification, login/logout, recovery, distributed auth throttling, profile editing and account settings are implemented; the two Phase 1A migrations are installed on staging. The staging preview sends Auth-only transactional email through the verified Resend subdomain to approved synthetic recipients. Listings, bookings, matching, payments and admin features are not implemented. No production data or live payment is used.
 
 ## Architecture
 
