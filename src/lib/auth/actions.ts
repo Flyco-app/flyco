@@ -3,6 +3,7 @@ import { redirect } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
 import { getVerifiedIdentity, requireActiveAccount } from './session';
 import { enforceAuthRateLimit } from './rate-limit';
+import { assertTrustedServerActionOrigin } from './origin';
 import {
   changePasswordSchema,
   emailSchema,
@@ -22,6 +23,7 @@ function getFields(form: FormData) {
   );
 }
 export async function signUp(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const parsed = signUpSchema.safeParse(getFields(form));
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   if (!parsed.success) redirect(`/${locale}/signup?error=invalid`);
@@ -44,6 +46,7 @@ export async function signUp(form: FormData) {
 }
 
 export async function logIn(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const parsed = loginSchema.safeParse(getFields(form));
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   if (!parsed.success) redirect(`/${locale}/login?error=failed`);
@@ -65,6 +68,7 @@ export async function logIn(form: FormData) {
 }
 
 export async function logOut(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   const client = await createSupabaseServerClient();
   const { error } = await client.auth.signOut({ scope: 'global' });
@@ -73,6 +77,7 @@ export async function logOut(form: FormData) {
 }
 
 export async function requestPasswordReset(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const parsed = resetRequestSchema.safeParse(getFields(form));
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   if (parsed.success) {
@@ -95,6 +100,7 @@ export async function requestPasswordReset(form: FormData) {
 }
 
 export async function changePassword(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   const parsed = changePasswordSchema.safeParse(getFields(form));
   if (!parsed.success) redirect(`/${locale}/new-password?error=invalid`);
@@ -115,6 +121,7 @@ export async function changePassword(form: FormData) {
 }
 
 export async function updateProfile(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   const parsed = profileSchema.safeParse(getFields(form));
   if (!parsed.success) redirect(`/${locale}/settings?error=invalid`);
@@ -131,6 +138,7 @@ export async function updateProfile(form: FormData) {
 }
 
 export async function changeEmail(form: FormData) {
+  await assertTrustedServerActionOrigin();
   const locale = safeLocale(String(form.get('locale') ?? 'fr'));
   const parsed = emailSchema.safeParse(form.get('email'));
   if (!parsed.success) redirect(`/${locale}/settings?error=invalid`);

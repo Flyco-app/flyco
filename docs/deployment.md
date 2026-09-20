@@ -21,7 +21,7 @@ Production release must require successful main-commit CI, staging migration val
 
 ## Provisioning status vs plan
 
-See services.md. Supabase staging and production exist. A Vercel preview creation was accepted but cannot yet be read/verified through the connector. CI deployment credentials, DNS, production paid plans/backups, Resend domain and Sentry project remain setup work. No real transactional endpoint exists, so do not configure active payment webhooks yet. Do not claim delivery automation is live merely because YAML exists.
+See services.md. Supabase staging and production exist. The `flyco` Vercel project has a tested immutable preview configured with Preview-only staging variables. `auth.flyco.site` is verified in Resend and Supabase staging custom SMTP uses it for transactional Auth mail. The staging Sentry project accepts a deliberately redacted synthetic server error. Production deployment, paid recovery/hosting controls, release credentials and alert ownership remain setup work. No payment webhook is configured.
 
 ## Local database workflow
 
@@ -47,7 +47,7 @@ The private organization repository is on Free. Main branch protection creation 
 
 ## Review correction: preview credentials and routine merges
 
-The manual smoke workflow does not receive any bypass secret. Playwright refuses a configured bypass secret: a `.vercel.app` suffix proves neither ownership nor the PR commit, and global request headers/traces could expose credentials. Phase 0B must verify deployment project/team/preview target/SHA through authenticated provider metadata before using an origin-scoped bypass mechanism; prevent cross-origin forwarding and secret-bearing artifacts. Protected previews remain unverified until that exists.
+The manual smoke workflow does not receive a bypass secret. Hosted verification uses an authenticated, origin-scoped Vercel preview session outside CI; secrets and session material are excluded from traces and artifacts. A `.vercel.app` suffix alone proves neither ownership nor commit identity, so the deployment/project/source commit are checked before recording a result.
 
 The owner authorizes Codex to review and squash-merge routine in-scope PRs after all applicable checks pass on the exact head, without repeated confirmation. Do not bypass branch protections or unresolved reviews. This workflow preference does not grant paid-plan changes or production release approval; automatic production deployment remains disabled.
 
@@ -55,12 +55,12 @@ The owner authorizes Codex to review and squash-merge routine in-scope PRs after
 
 No plan was upgraded and no paid resource was created. Local development uses `pnpm db:start:auth`, then `pnpm db:auth:check`. This starts only services required for Phase 1A; it does not ignore health checks or claim Storage/Realtime/Studio are healthy. Switching from database-only mode requires a targeted stop first. Tests use a random synthetic account, a publishable key for all user operations, and a CLI-derived local secret key only to remove that exact fixture. The script rejects any non-loopback/wrong-port target, never reads app/provider credentials and logs neither sessions nor email bodies. Synthetic email remains solely in local Mailpit; its account is deleted. CI suppresses CLI startup output containing local keys.
 
-GitHub Free continues running PR checks; Codex reviews and merges the exact successful head under standing authorization. This is procedural discipline, not enforceable branch protection. Production stays disabled. Vercel and Sentry access remain unresolved; local Phase 1A work is allowed without representing either hosted service as ready. Hosted staging/preview deployment is deferred until accessible and confirmed compatible with the no-charge constraint.
+GitHub Free continues running PR checks; Codex reviews and merges the exact successful head under standing authorization. This is procedural discipline, not enforceable branch protection. Production stays disabled. Vercel preview, Supabase staging Auth/SMTP and the staging Sentry project are configured without a plan upgrade; this does not make the Hobby project suitable for commercial production.
 
 References: [GitHub environment feature availability](https://docs.github.com/en/actions/reference/workflows-and-actions/deployments-and-environments), [GitHub Team features](https://github.com/team).
 
 ## Phase 1A hosted Auth deployment
 
-The two Phase 1A migrations were applied to Supabase project `xivkbucvwsioxevlijzj` (staging) only. Production project `mcmeroatheonlgxvveyl` remains untouched. Staging must configure Site URL to the stable staging application origin and use only explicit Flyco preview/staging redirect origins; wildcards and production origins are not approved. Supabase Auth email templates must match the committed token-hash templates. SMTP uses a verified Resend sending subdomain, TLS, transactional credentials, and disabled click/open tracking. `APP_ENV=staging`, `APP_URL`, staging `SUPABASE_URL`, its publishable key, `AUTH_RATE_LIMIT_HMAC_SECRET`, optional staging `SENTRY_DSN`, and one-time `OBSERVABILITY_PROBE_SECRET` belong in Vercel Preview environment secrets. No secret uses `NEXT_PUBLIC_`.
+The two Phase 1A migrations were applied to Supabase project `xivkbucvwsioxevlijzj` (staging) only. Production project `mcmeroatheonlgxvveyl` remains untouched. Staging Site URL and `APP_URL` use the stable `https://flyco-staging.vercel.app` alias, which is moved only to an exact reviewed immutable deployment; the redirect allowlist is empty because the reviewed templates use `SiteURL`. Wildcards and production origins are not approved. Supabase Auth templates match the committed token-hash templates. SMTP uses the verified `auth.flyco.site` Resend subdomain, TLS, transactional credentials, and disabled click/open tracking. `APP_ENV=staging`, staging `SUPABASE_URL`, its publishable key, `AUTH_RATE_LIMIT_HMAC_SECRET`, staging `SENTRY_DSN`, and the temporary `OBSERVABILITY_PROBE_SECRET` are Preview-only Vercel configuration. No secret uses `NEXT_PUBLIC_`.
 
 Hosted verification must use synthetic accounts and delete them afterward. It must record the immutable deployment URL and commit, confirmation/recovery/email-change delivery, replay denial, cookie/CSP/origin behavior, RLS through PostgREST, and the redacted Sentry probe. A preview deployment is not production and must not be promoted.
