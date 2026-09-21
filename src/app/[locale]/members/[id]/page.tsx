@@ -30,7 +30,15 @@ export default async function PublicProfilePage({
       .eq('profile_id', id)
       .maybeSingle(),
   ]);
-  if (profile.error || trust.error || !profile.data || !trust.data) notFound();
+  if (profile.error || trust.error || !profile.data || !trust.data) {
+    console.error('public_profile.load_failed', {
+      profileCode: profile.error?.code ?? null,
+      trustCode: trust.error?.code ?? null,
+      profileFound: Boolean(profile.data),
+      trustFound: Boolean(trust.data),
+    });
+    notFound();
+  }
   const d = dictionaries[locale];
   const { SUPABASE_URL } = getServerEnv();
   const avatarUrl =
