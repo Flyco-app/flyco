@@ -6,12 +6,13 @@ export async function proxy(request: NextRequest) {
   const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, APP_ENV } = parseServerEnv(
     process.env,
   );
+  const storageOrigin = SUPABASE_URL ? new URL(SUPABASE_URL).origin : null;
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
   const csp = [
     `default-src 'self'`,
     `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${APP_ENV === 'local' ? " 'unsafe-eval'" : ''}`,
     `style-src 'self' 'nonce-${nonce}'`,
-    `img-src 'self' data:`,
+    `img-src 'self' data:${storageOrigin ? ` ${storageOrigin}` : ''}`,
     `font-src 'self'`,
     `connect-src 'self'`,
     `object-src 'none'`,
