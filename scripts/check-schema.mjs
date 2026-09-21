@@ -25,7 +25,7 @@ try {
     reference
       .replace(
         /^begin;$/m,
-        'begin;\n-- Isolate the deployed Phase 1A slice inside this rolled-back reference check.\ndrop table if exists public.profiles cascade;',
+        'begin;\n-- Isolate every deployed vertical slice inside this rolled-back reference check.\ndrop schema if exists public cascade;\ncreate schema public;\ngrant usage on schema public to public;\ndrop schema if exists private cascade;',
       )
       .replace(/commit;\s*$/, () => `${tests}\nrollback;\n`),
   );

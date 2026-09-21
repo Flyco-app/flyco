@@ -42,6 +42,14 @@ describe('Auth boundary validation', () => {
         account_status: 'active',
         id: 'forged',
       }),
-    ).toEqual({ displayName: 'Alice', locale: 'ar' });
+    ).toEqual({
+      displayName: 'Alice',
+      locale: 'ar',
+      firstName: null,
+      lastName: null,
+      phone: null,
+      bio: null,
+      residenceLocationId: null,
+    });
   });
 });

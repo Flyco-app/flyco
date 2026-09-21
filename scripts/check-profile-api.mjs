@@ -55,9 +55,41 @@ try {
     .select()
     .single();
   assert.equal(first.error, null);
+  const publicCard = await a
+    .from('member_profiles')
+    .select('id,display_name,bio,residence_location_id')
+    .eq('id', ids[0])
+    .single();
+  assert.equal(publicCard.error, null);
+  assert.equal(publicCard.data?.display_name, 'Owner');
+  const avatarPath = `${ids[0]}/${randomUUID()}.png`;
+  const png = new Uint8Array([
+    0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0x00, 0x00, 0x00, 0x00,
+  ]);
+  const ownAvatar = await a.storage.from('avatars').upload(avatarPath, png, {
+    contentType: 'image/png',
+    upsert: false,
+  });
+  assert.equal(ownAvatar.error, null);
+  assert.ok(
+    (
+      await b.storage
+        .from('avatars')
+        .upload(`${ids[0]}/${randomUUID()}.png`, png, {
+          contentType: 'image/png',
+        })
+    ).error,
+  );
+  const publicAvatar = a.storage.from('avatars').getPublicUrl(avatarPath);
+  assert.equal((await fetch(publicAvatar.data.publicUrl)).status, 200);
   assert.equal(
     (await b.from('profiles').select().eq('id', ids[0])).data?.length,
     0,
+  );
+  assert.equal(
+    (await b.from('member_profiles').select('display_name').eq('id', ids[0]))
+      .data?.[0]?.display_name,
+    'Owner',
   );
   assert.equal((await anon.from('profiles').select()).error?.code, '42501');
   assert.ok(
@@ -91,6 +123,43 @@ try {
       ?.code,
     '42501',
   );
+  assert.equal(
+    (
+      await a
+        .from('profiles')
+        .update({ phone_verified_at: new Date().toISOString() })
+        .eq('id', ids[0])
+    ).error?.code,
+    '42501',
+  );
+  assert.equal(
+    (
+      await a
+        .from('profile_trust')
+        .update({ identity_verified: true })
+        .eq('profile_id', ids[0])
+    ).error?.code,
+    '42501',
+  );
+  const crossPublicWrite = await b
+    .from('member_profiles')
+    .update({ display_name: 'Attacker' })
+    .eq('id', ids[0]);
+  assert.equal(crossPublicWrite.error, null);
+  assert.equal(
+    (
+      await a
+        .from('member_profiles')
+        .select('display_name')
+        .eq('id', ids[0])
+        .single()
+    ).data?.display_name,
+    'Owner',
+  );
+  assert.equal(
+    (await anon.from('member_profiles').select('display_name')).data?.length,
+    1,
+  );
   const own = await a
     .from('profiles')
     .update({ display_name: 'Owner Updated' })
@@ -100,7 +169,11 @@ try {
   assert.equal(own.error, null);
   assert.equal(own.data?.display_name, 'Owner Updated');
   console.log(
-    'PASS: local Data API owner/other/anon profile reads, writes and column privilege checks.',
+    'PASS: local Data API profile/privacy/trust checks and real Storage owner/public-read checks.',
+  );
+  assert.equal(
+    (await a.storage.from('avatars').remove([avatarPath])).error,
+    null,
   );
 } finally {
   for (const id of ids) {

@@ -1,6 +1,14 @@
 # Authentication and authorization
 
-Status: Phase 1A member sign-in/profile flows implemented locally; staff/admin authorization remains design only.
+## Phase 1B visibility and mutation rules
+
+`member_profiles` exposes only display name, avatar path, bio, residence and account age. `profile_trust` exposes objective indicators. `profiles` remains self-only and contains preferred language, legal names, phone and account controls. Identity attempts/events are self-readable; provider references and raw identity evidence are not exposed or stored. Column grants prevent writes to account status, phone verification, trust, provider state, reason codes or review timestamps.
+
+Avatar reads are deliberately public because avatars appear on marketplace cards. Upload/update/delete remain JWT- and owner-bound under Storage RLS. Keys are generated as `<user UUID>/<random UUID>.<approved extension>`; the client filename is ignored. The server limits files to 2 MiB, allowlists JPEG/PNG/WebP and verifies signatures. Successful replacement updates the profile before deleting the previous object; failed profile updates remove the new object.
+
+Phone values must be E.164 and match the selected FR/MA residence prefix when a residence exists. Changing the number clears verification. No SMS provider is configured. Members can create pending identity attempts and cancel only pending/requires-input attempts with an expected version. Provider/staff transitions remain unavailable until a trusted internal command exists.
+
+Status: Phase 1B member profile/trust/location controls are implemented locally; staff/admin authorization remains design only.
 
 ## Identity
 

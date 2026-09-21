@@ -10,9 +10,9 @@ select ok(
 );
 select ok(
   not exists (
-    select 1 from storage.buckets where public = true
+    select 1 from storage.buckets where public = true and id <> 'avatars'
   ),
-  'No public storage buckets in the foundation'
+  'Only the reviewed avatar bucket is public'
 );
 select * from finish();
 rollback;

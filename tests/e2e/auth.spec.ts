@@ -107,8 +107,55 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await expect(page.getByText('Test Member')).toBeVisible();
     await page.getByRole('link', { name: 'Account settings' }).click();
     await page.getByLabel('Display name').fill('Updated Member');
+    await page.getByLabel('First name').fill('Updated');
+    await page.getByLabel('Last name').fill('Member');
+    await page.getByLabel('Phone (E.164)').fill('+33612345678');
+    await page.getByLabel('Short bio').fill('Public profile biography');
+    await page
+      .getByLabel('City of residence')
+      .selectOption({ label: 'Paris, France' });
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page.getByLabel('Display name')).toHaveValue('Updated Member');
+    await expect(page.getByLabel('Phone (E.164)')).toHaveValue('+33612345678');
+    await page.getByLabel('Profile photo').setInputFiles({
+      name: 'ignored-original-name.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64',
+      ),
+    });
+    await page.getByRole('button', { name: 'Upload photo' }).click();
+    await expect(page).toHaveURL(/\/en\/settings\?notice=avatar-saved$/);
+    await expect(
+      page.getByRole('img', { name: 'Updated Member' }),
+    ).toBeVisible();
+    expect(userId).toBeTruthy();
+    await page.goto(`/en/members/${userId}`);
+    await expect(
+      page.getByRole('heading', { name: 'Updated Member' }),
+    ).toBeVisible();
+    await expect(page.getByText('Public profile biography')).toBeVisible();
+    await expect(page.getByText(email)).toHaveCount(0);
+    await expect(page.getByText('+33612345678')).toHaveCount(0);
+    await expect(
+      page.getByRole('img', { name: 'Updated Member' }),
+    ).toBeVisible();
+    await page.goto('/ar/settings');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.getByLabel('الاسم الأول')).toHaveValue('Updated');
+    await page.goto('/en/settings');
+    await page.getByLabel('City of residence').evaluate((select) => {
+      const option = document.createElement('option');
+      option.value = '90000000-0000-4000-8000-000000000009';
+      option.textContent = 'Tampered';
+      select.append(option);
+    });
+    await page
+      .getByLabel('City of residence')
+      .selectOption('90000000-0000-4000-8000-000000000009');
+    await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page).toHaveURL(/\/en\/settings\?error=invalid$/);
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(/\/en\/login$/);
     await page.goto('/en/profile');

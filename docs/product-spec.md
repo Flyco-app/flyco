@@ -1,6 +1,10 @@
 # Flyco product specification
 
-Status: foundation design, 2026-09-17. Product behavior below is planned, not implemented.
+## Phase 1B profile and trust boundary
+
+Members have self-only legal/contact settings (first name, last name, preferred language and E.164 phone), and a separate public marketplace card (display name, short bio, avatar and selected canonical residence). Public pages never expose email, phone, legal names, account controls or verification attempt details. Objective trust indicators are public and system controlled. Locations are selected from Flyco's normalized catalog.
+
+Status: Phase 1B profile, trust, avatar, identity-attempt and normalized-location behavior is implemented. Transactional marketplace behavior below remains planned.
 
 ## Purpose and scope
 
