@@ -9,6 +9,27 @@ export const emailSchema = z
   .transform((s) => s.trim().toLowerCase());
 export const passwordSchema = z.string().min(12).max(128);
 export const displayNameSchema = z.string().trim().min(2).max(80);
+const optionalNameSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z.string().trim().min(1).max(80).nullable().default(null),
+);
+const optionalBioSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z.string().trim().max(500).nullable().default(null),
+);
+const phoneSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value.trim() === '' ? null : value),
+  z
+    .string()
+    .trim()
+    .regex(/^\+[1-9]\d{7,14}$/)
+    .nullable()
+    .default(null),
+);
+const locationIdSchema = z.preprocess(
+  (value) => (typeof value === 'string' && value === '' ? null : value),
+  z.uuid().nullable().default(null),
+);
 export const signUpSchema = z.object({
   email: emailSchema,
   password: passwordSchema,
@@ -23,7 +44,23 @@ export const loginSchema = z.object({
 export const profileSchema = z.object({
   displayName: displayNameSchema,
   locale: localeSchema,
+  firstName: optionalNameSchema,
+  lastName: optionalNameSchema,
+  phone: phoneSchema,
+  bio: optionalBioSchema,
+  residenceLocationId: locationIdSchema,
 });
+
+export function phoneMatchesCountry(
+  phone: string | null,
+  countryCode: string | null,
+): boolean {
+  if (!phone || !countryCode) return true;
+  return (
+    (countryCode === 'FR' && phone.startsWith('+33')) ||
+    (countryCode === 'MA' && phone.startsWith('+212'))
+  );
+}
 export const resetRequestSchema = z.object({
   email: emailSchema,
   locale: localeSchema,

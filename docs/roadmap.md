@@ -1,5 +1,9 @@
 # Authentication and authorization
 
+## Phase 1B — profile, trust and locations
+
+Implemented scope: private profile details, narrow public member cards, public-read/owner-write avatars, E.164 phone storage with verification invalidation, objective trust projection, identity-verification attempts and audit events, normalized FR/MA locations, provider-neutral geocoding boundary, and FR/EN/AR account UI. Trips, delivery requests and other marketplace workflows remain outside this phase.
+
 Status: Phase 1A member sign-in/profile flows implemented locally; staff/admin authorization remains design only.
 
 ## Identity

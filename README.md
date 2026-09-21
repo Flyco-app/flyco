@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1A identity baseline.** Supabase Auth, cross-browser token-hash email verification, login/logout, recovery, distributed auth throttling, profile editing and account settings are implemented; the two Phase 1A migrations are installed on staging. The staging preview sends Auth-only transactional email through the verified Resend subdomain to approved synthetic recipients. Listings, bookings, matching, payments and admin features are not implemented. No production data or live payment is used.
+**Current scope: Phase 1B profile, trust and location foundation.** Supabase Auth, hosted email flows, distributed auth throttling, private account profiles, public member cards, avatars, objective trust indicators, identity-attempt records and normalized locations are implemented. Listings, bookings, matching, payments and admin features are not implemented. No production data or live payment is used.
 
 ## Architecture
 
@@ -34,11 +34,11 @@ pnpm db:lint
 pnpm db:test
 ```
 
-Copy the local API URL/publishable key from local status into SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY in .env.local only when developing auth. Never copy a service-role/secret key into a public variable. The Auth development profile runs PostgreSQL, Auth, REST/gateway and Mailpit. Studio, Storage and Realtime are not started by this profile. The full stack remains available via `pnpm db:start` but its health is not yet verified on this host. Local email inbox: http://127.0.0.1:55324. Keep local status credentials out of logs/issues. Stop with `pnpm db:stop`.
+Copy the local API URL/publishable key from local status into SUPABASE_URL / SUPABASE_PUBLISHABLE_KEY in .env.local only when developing auth. Never copy a service-role/secret key into a public variable. The development profile runs PostgreSQL, Auth, REST/gateway, Storage and Mailpit. Studio and Realtime are excluded. Local email inbox: http://127.0.0.1:55324. Keep local status credentials out of logs/issues. Stop with `pnpm db:stop`.
 
 The existing remote project is **staging**. The separate **flyco-production** project is reserved for reviewed releases. Local validation rejects remote databases; hosted environment checks reject staging/production cross-use. No remote connection is needed for development.
 
-`docs/schema.sql` is a default-deny **design reference, not a migration**. Do not apply it to a shared database. The Phase 1A profiles migration is real and tested locally; the rest of the reference remains undeployed. Future migrations arrive incrementally with commands, RLS policies and tests. See [database design](docs/database.md).
+`docs/schema.sql` is a default-deny **design reference, not a migration**. Do not apply it to a shared database. Phase 1A and Phase 1B have narrow, tested migrations; the rest of the reference remains undeployed. Future migrations arrive incrementally with commands, RLS policies and tests. See [database design](docs/database.md).
 
 ## Environment configuration
 

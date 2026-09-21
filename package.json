@@ -28,7 +28,7 @@
     "secrets:check": "node scripts/check-secrets.mjs",
     "db:design:check": "node scripts/check-schema.mjs",
     "db:start:database": "supabase db start",
-    "db:start:auth": "supabase start --exclude realtime,storage-api,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
+    "db:start:auth": "supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "db:auth:check": "node scripts/check-local-auth.mjs",
     "test:e2e:auth:local": "node scripts/run-local-auth-e2e.mjs",
     "db:profile:check": "node scripts/check-profile-api.mjs"

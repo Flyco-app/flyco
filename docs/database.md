@@ -1,6 +1,12 @@
 # Database model and access design
 
-Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory now contains only the Phase 1A `profiles` migration. This prevents deploying table APIs without their authorization, transitions and tests. Promote vertical slices into versioned migrations during subsequent phases. No shared database was changed for schema design.
+## Phase 1B implemented schema
+
+`profiles` remains the private self-owned account record and adds legal names, E.164 phone, system-controlled `phone_verified_at` and `updated_at`. `member_profiles` is the narrow public card. `profile_trust` is a system-written projection. `locations` is the canonical read-only catalog; provider IDs are isolated in `private.location_provider_references`. `identity_verifications` stores versioned attempts and `identity_verification_events` their audit history. The public `avatars` bucket accepts only image MIME types up to 2 MiB and owner UUID paths.
+
+Only verified phone numbers are unique, so an unverified number cannot be used to block its rightful owner. Location references use `ON DELETE SET NULL`; account-owned rows cascade from `profiles`. Indexed foreign keys cover residence and identity history lookup. Member profile changes use a security-invoker SQL command so private and public representations update atomically.
+
+Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory contains the narrow Phase 1A/Auth-hardening and Phase 1B migrations with matching authorization tests. Future vertical slices remain undeployed until their owning phases add commands, RLS policies and tests.
 
 ## Conventions
 

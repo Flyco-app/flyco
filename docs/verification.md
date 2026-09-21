@@ -1,5 +1,9 @@
 # Foundation verification record
 
+## Phase 1B verification
+
+Local verification on `codex/phase-1b-profile-trust-locations` passes formatting, lint, strict typecheck, 57 unit tests, secret scan, database reset/lint, 63 pgTAP assertions, and live local Data API plus Storage checks. Those checks cover private/public field separation, ownership transfer, forged trust and verification fields, phone invalidation, normalized-location mutation denial, identity attempt transitions, public avatar reads, owner writes, cross-user writes and cross-user avatar references. The macOS sandbox cannot run the native Turbopack build because its worker cannot bind an internal loopback port; the unchanged Turbopack build and Playwright suite remain required on Linux CI before staging promotion. Staging remains unchanged until that exact-head CI passes.
+
 Date: 2026-09-17. Target: local engineering foundation, not production feature certification.
 
 | Check                             | Result / scope                                                                                                                                                      |

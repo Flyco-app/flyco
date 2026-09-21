@@ -1,6 +1,13 @@
 # API and state design
 
-Status: contract for future implementation. No product endpoints are exposed in this foundation.
+## Phase 1B commands
+
+- `update_own_profile` is security-invoker and uses the member JWT. It atomically updates private settings and the public card after Zod and active-location validation.
+- Avatar upload validates size, MIME, signature and generated owner path, uploads with the member JWT, updates the card, then removes the previous object.
+- Identity start inserts only `id/user_id`; defaults force `pending`. Cancellation uses `id + expected version`, with database policy restricting `pending|requires_input → cancelled`.
+- Locations are read-only. No client payload supplies authoritative coordinates, canonical labels or provider IDs.
+
+Status: the Phase 1B commands above are implemented as same-origin Server Actions backed by member-JWT database operations. Transactional product endpoints below remain a future contract.
 
 ## Boundaries
 
