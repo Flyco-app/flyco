@@ -14,7 +14,7 @@ Each phase is independently reviewable and must pass its own security, database,
 
 **Definition of done:** local and hosted Auth lifecycle, token-hash email flows, SMTP, cookie/CSP/origin checks, RLS/Data API denial tests, Sentry redaction verification and staging-only migrations.
 
-## Phase 1B — profile, trust and locations (ready for review)
+## Phase 1B — profile, trust and locations (complete)
 
 **Objective:** provide the member identity foundation required by later marketplace records without creating transactional features.
 
