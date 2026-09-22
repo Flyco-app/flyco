@@ -1,5 +1,15 @@
 # Authentication and authorization
 
+## Phase 1D decisions
+
+| ID  | Decision                                                                   | Reason / reconsider when                                                                                                     |
+| --- | -------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
+| A20 | Model one declared item row per request in V1                              | Matching and booking terms stay unambiguous; allow multiple independent items only with allocation and partial-booking rules |
+| A21 | Reuse `item_categories` for traveler acceptance and sender declaration     | Compatibility is an exact stable code without duplicated taxonomies                                                          |
+| A22 | Keep item photos private and exclude them from public discovery            | Photos can reveal personal or security-sensitive detail; add booking-derived access only after scanning and policy review    |
+| A23 | Reserve database-generated photo metadata before member-JWT Storage upload | Storage RLS can authorize an exact owner/item path and enforce the five-photo concurrency limit under the request lock       |
+| A24 | Expire by latest delivery, filter at read time and defer scheduler setup   | Public correctness is independent of worker timing and current infrastructure needs no new scheduler                         |
+
 ## Phase 1C decisions
 
 | ID  | Decision                                                                       | Reason / reconsider when                                                                                                                       |

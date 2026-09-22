@@ -51,6 +51,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
   let changedEmail: string | undefined;
   let userId: string | undefined;
   let tripId: string | undefined;
+  let deliveryRequestId: string | undefined;
   const cspViolations: string[] = [];
   page.on('console', (message) => {
     if (message.text().includes('Content Security Policy'))
@@ -204,6 +205,73 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await page.getByRole('button', { name: 'Cancel trip' }).click();
     await expect(page).toHaveURL(/notice=cancelled/);
     await expect(page.getByText('Cancelled')).toBeVisible();
+    const requestStart = new Date(Date.now() + 31 * 86_400_000);
+    const requestEnd = new Date(Date.now() + 35 * 86_400_000);
+    await page.goto('/en/delivery-requests/new');
+    await page.getByLabel('Origin').selectOption({ label: 'Paris, France' });
+    await page
+      .getByLabel('Destination')
+      .selectOption({ label: 'Casablanca, Morocco' });
+    await page
+      .getByLabel('Earliest departure')
+      .fill(utcToLocalDateTime(requestStart.toISOString(), 'Europe/Paris'));
+    await page
+      .getByLabel('Latest delivery')
+      .fill(utcToLocalDateTime(requestEnd.toISOString(), 'Africa/Casablanca'));
+    await page.getByLabel('Category').selectOption('documents');
+    await page.getByLabel('Short title').fill('Signed documents');
+    await page
+      .getByLabel('Description')
+      .fill('A sealed envelope containing signed business contracts.');
+    await page
+      .getByLabel('Declared contents')
+      .fill('Two signed paper contracts');
+    await page.getByLabel('Total weight (kg)').fill('1.25');
+    await page.getByLabel('Length').fill('25.5');
+    await page.getByLabel('Width').fill('18');
+    await page.getByLabel('Height').fill('2.5');
+    await page.getByRole('button', { name: 'Save draft' }).click();
+    await expect(page).toHaveURL(
+      /\/en\/delivery-requests\/[0-9a-f-]+\?notice=created$/,
+    );
+    deliveryRequestId = new URL(page.url()).pathname.split('/').at(-1);
+    expect(deliveryRequestId).toMatch(/^[0-9a-f-]{36}$/);
+    await page.getByLabel('Photo file').setInputFiles({
+      name: 'untrusted-original.png',
+      mimeType: 'image/png',
+      buffer: Buffer.from(
+        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+        'base64',
+      ),
+    });
+    await page.getByRole('button', { name: 'Add photo' }).click();
+    await expect(page).toHaveURL(/notice=photo-added/);
+    await page.getByRole('button', { name: 'Remove' }).click();
+    await expect(page).toHaveURL(/notice=photo-removed/);
+    await page.getByRole('button', { name: 'Publish' }).click();
+    await expect(page).toHaveURL(/notice=published/);
+    await page.getByRole('link', { name: 'View public listing' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Published request' }),
+    ).toBeVisible();
+    await expect(page.getByText('Signed documents')).toBeVisible();
+    await expect(page.getByText('Two signed paper contracts')).toHaveCount(0);
+    await expect(page.getByText(email)).toHaveCount(0);
+    await expect(page.getByText('+33612345678')).toHaveCount(0);
+    await page.goto('/fr/delivery-requests');
+    await expect(
+      page.getByRole('heading', { name: 'Mes envois' }),
+    ).toBeVisible();
+    await page.goto('/ar/delivery-requests');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(
+      page.getByRole('heading', { name: 'طلبات الإرسال' }),
+    ).toBeVisible();
+    await page.goto(`/en/delivery-requests/${deliveryRequestId}`);
+    await page.getByLabel('Cancellation reason').fill('E2E cleanup');
+    await page.getByRole('button', { name: 'Cancel request' }).click();
+    await expect(page).toHaveURL(/notice=cancelled/);
+    await expect(page.getByText('Cancelled')).toBeVisible();
     await page.goto('/en/settings');
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(/\/en\/login$/);
@@ -275,6 +343,23 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
           {
             input:
               "delete from public.trip_events where trip_id = :'trip_id'::uuid; delete from public.trip_cancellations where trip_id = :'trip_id'::uuid; delete from public.trip_categories where trip_id = :'trip_id'::uuid; delete from public.trips where id = :'trip_id'::uuid;",
+            stdio: ['pipe', 'ignore', 'ignore'],
+          },
+        );
+      }
+      if (deliveryRequestId && process.env.E2E_LOCAL_DB_URL) {
+        execFileSync(
+          'psql',
+          [
+            process.env.E2E_LOCAL_DB_URL,
+            '-v',
+            'ON_ERROR_STOP=1',
+            '-v',
+            `request_id=${deliveryRequestId}`,
+          ],
+          {
+            input:
+              "delete from public.delivery_request_events where delivery_request_id = :'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id = :'request_id'::uuid; delete from public.item_photos where item_id in (select id from public.declared_items where delivery_request_id = :'request_id'::uuid); delete from public.declared_items where delivery_request_id = :'request_id'::uuid; delete from public.delivery_requests where id = :'request_id'::uuid;",
             stdio: ['pipe', 'ignore', 'ignore'],
           },
         );

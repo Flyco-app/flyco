@@ -42,11 +42,11 @@ Each phase is independently reviewable and must pass its own security, database,
 
 **Definition of done:** a member can securely manage only their own trips; the public projection reveals only approved fields; transition and concurrency invariants are database-backed; all CI and staging checks pass. Delivery requests, matching, bookings, messaging and payments remain excluded.
 
-## Phase 2 — sender delivery requests and items
+## Phase 1D — sender delivery requests and items (complete)
 
-Implement sender requests, declared items, private item photos and request lifecycle commands using normalized locations. Establish category, weight/dimension and date-window constraints. Do not match or book yet.
+Implemented sender requests, a V1 declared shipment item, private item photos and versioned lifecycle commands using normalized locations. Category, exact measurement, flexible date-window, public projection, audit and expiration boundaries are database-backed. Matching and booking remain excluded.
 
-## Phase 3 — deterministic matching
+## Phase 1E — deterministic matching
 
 Implement explainable route/date/category/capacity filtering and ranking over published trips and requests. Store match reasons and algorithm version; test boundary dates, capacity and deterministic ordering.
 

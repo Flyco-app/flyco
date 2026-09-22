@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1C traveler trips.** Supabase Auth, account security, profiles, public member cards, trust/identity foundations, normalized locations and versioned traveler trips are implemented. Delivery requests, matching, bookings, messaging, payments, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
+**Current scope: Phase 1D sender delivery requests.** Supabase Auth, account security, profiles, trust/location foundations, traveler trips, sender requests, declared items and private item photos are implemented. Matching, bookings, messaging, payments, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
 
 ## Architecture
 
@@ -64,11 +64,11 @@ pnpm test:e2e:auth:local # local Auth profile + Mailpit required
 
 ## Deployment
 
-Private GitHub repository: [Flyco-app/flyco](https://github.com/Flyco-app/flyco). Work through `codex/*` branches and PRs. CI runs lint/types/tests/build, local Auth E2E, Data API/RLS tests and database guardrails. Planned required sequence: successful CI → exact-commit Vercel preview E2E → review → merge → protected production release. Automatic Git deployments are disabled until enforcement/setup is ready. Provisioning and plan constraints are recorded rather than hidden behind a green local test. No production schema or money movement is deployed by this foundation.
+The temporarily public GitHub repository is [Flyco-app/flyco](https://github.com/Flyco-app/flyco). Treat every commit and reachable history object as public. Work through `codex/*` branches and PRs. CI runs lint/types/tests/build, local Auth E2E, Data API/RLS/Storage tests, database guardrails and secret/history checks. Git-backed Vercel previews are the review path; production promotion remains disabled. No production schema or money movement is deployed by this work.
 
 ## Engineering documentation
 
-[Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
+[Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Trips](docs/trips.md) · [Delivery requests](docs/delivery-requests.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
 
 Read [AGENTS.md](AGENTS.md) before future Codex work. Business launch blockers include supported Morocco-recipient payout arrangements, carriage/customs eligibility, liability, pricing/refund policy, identity/privacy rules and commercial hosting/recovery plans.
 

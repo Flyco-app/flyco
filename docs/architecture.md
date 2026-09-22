@@ -30,6 +30,12 @@ Tailwind v4 and shadcn configuration are installed; add primitives as they are u
 
 First optimize indexed queries, keyset pagination and transaction duration. Add a dedicated queue worker when outbox volume exceeds bounded scheduled batches. Introduce PostGIS only when approximate-radius matching is a product requirement. Extract services only for an independently scaling operational workload. Start with an EU database and nearby compute; residency/backup locations require review before production.
 
+## Current domain modules
+
+`src/modules/trips` and `src/modules/delivery-requests` are the implemented listing slices. Each keeps Zod input schemas, localized copy, presentation conversion, server-only queries and thin Server Actions together. Their PostgreSQL aggregates are private owner tables mutated only by versioned command functions. Anonymous marketplace reads use narrow fixed projections instead of base-table policies.
+
+Phase 1D keeps one declared shipment item per request, reuses the trip category registry and stores weight/dimensions as integer grams/millimeters. Item photos use their own private bucket and a pending metadata reservation before upload. There is no generic API layer, repository abstraction, matching service, scheduler, queue or second deployment. This preserves a modular monolith while leaving explicit transaction boundaries for Phase 1E matching.
+
 ## Sources checked
 
 - [Next installation](https://nextjs.org/docs/app/getting-started/installation): Next 16.3.5 verified against npm on 2026-09-17.
