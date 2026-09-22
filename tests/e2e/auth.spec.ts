@@ -109,7 +109,29 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     );
     await replayContext.close();
     await expect(page.getByText('Test Member')).toBeVisible();
-    await page.getByRole('link', { name: 'Account settings' }).click();
+    const accountNav = page.getByRole('navigation');
+    await expect(
+      accountNav.getByRole('link', { name: 'Flyco' }),
+    ).toHaveAttribute('href', '/en/profile');
+    await expect(
+      accountNav.getByRole('link', { name: 'Profile' }),
+    ).toBeVisible();
+    await expect(
+      accountNav.getByRole('link', { name: 'Account settings' }),
+    ).toBeVisible();
+    await expect(
+      accountNav.getByRole('link', { name: 'My trips' }),
+    ).toBeVisible();
+    await expect(
+      accountNav.getByRole('link', { name: 'My delivery requests' }),
+    ).toBeVisible();
+    await accountNav.getByRole('link', { name: 'My trips' }).click();
+    await expect(page).toHaveURL(/\/en\/trips$/);
+    await accountNav.getByRole('link', { name: 'Profile' }).click();
+    await expect(page).toHaveURL(/\/en\/profile$/);
+    await expect(page.getByText('Test Member')).toBeVisible();
+    await accountNav.getByRole('link', { name: 'Account settings' }).click();
+    await expect(page).toHaveURL(/\/en\/settings$/);
     await page.getByLabel('Display name').fill('Updated Member');
     await page.getByLabel('First name').fill('Updated');
     await page.getByLabel('Last name').fill('Member');
@@ -149,6 +171,20 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     ).toBeVisible();
     await page.goto('/ar/settings');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(
+      page.getByRole('navigation').getByRole('link', { name: 'الملف الشخصي' }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole('navigation')
+        .getByRole('link', { name: 'إعدادات الحساب' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('navigation').getByRole('link', { name: 'رحلاتي' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('navigation').getByRole('link', { name: 'طلبات الإرسال' }),
+    ).toBeVisible();
     await expect(page.getByLabel('الاسم الأول')).toHaveValue('Updated');
     await page.goto('/en/settings');
     await page.getByLabel('City of residence').evaluate((select) => {
