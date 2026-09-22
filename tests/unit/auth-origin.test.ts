@@ -1,5 +1,8 @@
 import { describe, expect, it } from 'vitest';
-import { isTrustedActionRequest } from '@/lib/auth/origin-core';
+import {
+  isTrustedActionRequest,
+  vercelPreviewOrigin,
+} from '@/lib/auth/origin-core';
 
 describe('Server Action origin checks', () => {
   const expectedOrigin = 'https://preview.flyco.site';
@@ -26,5 +29,32 @@ describe('Server Action origin checks', () => {
     expect(isTrustedActionRequest({ expectedOrigin, origin, host })).toBe(
       false,
     );
+  });
+});
+
+describe('Vercel preview origin derivation', () => {
+  it('accepts only the exact platform-provided preview hostname', () => {
+    expect(
+      vercelPreviewOrigin({
+        vercel: '1',
+        environment: 'preview',
+        url: 'flyco-git-example.vercel.app',
+      }),
+    ).toBe('https://flyco-git-example.vercel.app');
+  });
+
+  it.each([
+    { vercel: undefined, environment: 'preview', url: 'flyco.vercel.app' },
+    { vercel: '1', environment: 'production', url: 'flyco.vercel.app' },
+    { vercel: '1', environment: 'preview', url: 'evil.example' },
+    { vercel: '1', environment: 'preview', url: 'a..vercel.app' },
+    { vercel: '1', environment: 'preview', url: 'FLYCO.vercel.app' },
+    {
+      vercel: '1',
+      environment: 'preview',
+      url: 'flyco.vercel.app.attacker.example',
+    },
+  ])('rejects an untrusted preview origin: %o', (input) => {
+    expect(vercelPreviewOrigin(input)).toBeNull();
   });
 });
