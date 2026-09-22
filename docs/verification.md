@@ -1,12 +1,16 @@
 # Foundation verification record
 
-## Phase 1D local verification (2026-09-22)
+## Phase 1D verification (2026-09-22)
 
 Phase 1D is implemented on `codex/phase-1d-delivery-requests`. Formatting, zero-warning lint, strict typecheck, 74 Vitest tests and a clean Next.js production build pass. Four Chromium tests pass, including the full authenticated lifecycle and delivery request draft, private photo add/remove, publish, narrow public view, French navigation, Arabic RTL and cancellation.
 
 The local database resets from migrations and passes database lint plus 158 pgTAP assertions. The Phase 1D pgTAP suite covers constraints, active-account enforcement, owner/other/anonymous access, direct owner/status/audit forgery, lifecycle commands, public projection, optimistic concurrency, photo reservation authorization, MIME/size/count limits and expiration. A direct Data API/Storage runner confirms owner-only base rows, cross-user denial, private signed URLs, unsafe-path denial, photo cleanup and restricted-account publication denial. Its synthetic users and rows are deleted.
 
-Staging migration, exact-head GitHub CI, Git-backed Preview verification, hosted synthetic cleanup and the final reachable-history scan are pending until the Phase 1D PR head is fixed. Production has not been queried or modified.
+GitHub Actions run `35766598466` passed its quality and database jobs on implementation commit `849800dff4bf8fa242d4c81aa48649780456c2e2`; the Git-backed Vercel checks also passed. The existing Vercel project produced immutable Preview `https://flyco-4a34t9eeq-faridiali27-5309s-projects.vercel.app` from that commit. The reachable-history scanner and an independent Gitleaks 8.30.1 scan over 35 commits found no secret exposure.
+
+Migration `phase_1d_delivery_requests` is applied only to staging project `xivkbucvwsioxevlijzj`. A rolled-back staging RLS audit passed all 15 checks for owner access, status/audit forgery denial, cross-user base/item/photo denial, anonymous base-table denial, the narrow public projection, private Storage configuration and policy presence. No Phase 1D schema was applied to production.
+
+The hosted flow used two synthetic staging members. It confirmed owner login, draft creation and editing, private JPEG upload through the authenticated Storage API, publication, the narrow public view, French formatting, Arabic `lang=ar`/`dir=rtl`, cross-user private-detail denial, public listing access and cancellation. The public page omitted description, declared contents, handling notes, private contact data, Storage paths and photos. The private object was deleted through the authenticated Storage API; both Auth users and all associated request, item, photo, cancellation and audit rows were then removed. A final query returned zero synthetic users, profiles, requests, photo rows and Storage objects. Production was not queried, migrated or deployed.
 
 ## Phase 1C local verification (2026-09-22)
 
