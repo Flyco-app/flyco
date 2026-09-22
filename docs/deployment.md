@@ -1,5 +1,9 @@
 # Environments and delivery
 
+## Git-backed previews
+
+The existing Vercel `flyco` project is connected to `Flyco-app/flyco`. Pull requests create a preview and report commit status; no second project or deploy hook is needed. `vercel.json` must not disable Git deployments. A Phase 1C preview is accepted only after its deployment identifies the exact PR head and uses staging Supabase configuration. Repository migrations remain the schema source of truth. Supabase/Vercel integration presence does not authorize automatic production migrations, database branching or promotion.
+
 ## Environment registry
 
 | Environment | Database and providers                                                             | Purpose                                                                       |

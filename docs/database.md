@@ -1,5 +1,11 @@
 # Database model and access design
 
+## Phase 1C implemented schema
+
+`item_categories` is active read-only reference data. `trips` owns the route, UTC instants, offered capacity, lifecycle and optimistic version. `trip_categories` normalizes accepted categories. `trip_cancellations` keeps the owner-only reason separate from discovery. `trip_events` is append-only from controlled commands.
+
+Foreign keys to profiles, locations and categories use `ON DELETE RESTRICT` so future transactional history cannot be removed by cascading account or reference-data deletion. Indexed access paths cover owner history, published route/departure lookup, category lookup and ordered event history. Database checks enforce different endpoints, ordered timestamps, 1–50,000 grams, allowed lifecycle values and state timestamps. See [trips](trips.md) for commands, concurrency and visibility.
+
 ## Phase 1B implemented schema
 
 `profiles` remains the private self-owned account record and adds legal names, E.164 phone, system-controlled `phone_verified_at` and `updated_at`. `member_profiles` is the narrow public card. `profile_trust` is a system-written projection. `locations` is the canonical read-only catalog; provider IDs are isolated in `private.location_provider_references`. `identity_verifications` stores versioned attempts and `identity_verification_events` their audit history. The public `avatars` bucket accepts only image MIME types up to 2 MiB and owner UUID paths.

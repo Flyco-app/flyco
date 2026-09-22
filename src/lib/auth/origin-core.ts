@@ -23,3 +23,20 @@ export function isTrustedActionRequest(input: OriginCheck): boolean {
     return false;
   }
 }
+
+export function vercelPreviewOrigin(input: {
+  vercel: string | undefined;
+  environment: string | undefined;
+  url: string | undefined;
+}): string | null {
+  if (input.vercel !== '1' || input.environment !== 'preview' || !input.url)
+    return null;
+  const hostname = input.url.toLowerCase();
+  if (
+    hostname !== input.url ||
+    hostname.length > 253 ||
+    !/^(?:[a-z0-9](?:[a-z0-9-]{0,61}[a-z0-9])?\.)+vercel\.app$/.test(hostname)
+  )
+    return null;
+  return `https://${hostname}`;
+}

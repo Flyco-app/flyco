@@ -31,7 +31,8 @@
     "db:start:auth": "supabase start --exclude realtime,imgproxy,postgres-meta,studio,edge-runtime,logflare,vector,supavisor",
     "db:auth:check": "node scripts/check-local-auth.mjs",
     "test:e2e:auth:local": "node scripts/run-local-auth-e2e.mjs",
-    "db:profile:check": "node scripts/check-profile-api.mjs"
+    "db:profile:check": "node scripts/check-profile-api.mjs",
+    "db:trips:check": "node scripts/check-trips-api.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.0",

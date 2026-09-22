@@ -14,7 +14,7 @@ Each phase is independently reviewable and must pass its own security, database,
 
 **Definition of done:** local and hosted Auth lifecycle, token-hash email flows, SMTP, cookie/CSP/origin checks, RLS/Data API denial tests, Sentry redaction verification and staging-only migrations.
 
-## Phase 1B — profile, trust and locations (ready for review)
+## Phase 1B — profile, trust and locations (complete)
 
 **Objective:** provide the member identity foundation required by later marketplace records without creating transactional features.
 
@@ -22,7 +22,7 @@ Each phase is independently reviewable and must pass its own security, database,
 
 **Definition of done:** exact-head CI, pgTAP and direct Data API/Storage authorization checks, staging migration and hosted verification, synthetic-data cleanup, accurate documentation and no production change.
 
-## Phase 1C — traveler trips
+## Phase 1C — traveler trips (complete)
 
 **Objective:** let an authenticated, active member create and manage a trip using normalized locations and explicit capacity/category constraints.
 
