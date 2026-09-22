@@ -1,5 +1,11 @@
 # API and state design
 
+## Phase 1C trip commands
+
+The Next.js Server Actions validate localized form input, resolve canonical location timezones, convert unambiguous local times to UTC and invoke member-JWT RPCs. The database commands are `create_trip_draft`, `update_trip`, `publish_trip`, `cancel_trip` and `expire_own_departed_trips`. `get_public_trip` is the anonymous/authenticated read projection. There is no generic trip PATCH or client-selectable status field.
+
+`update_trip`, `publish_trip` and `cancel_trip` require `input_expected_version`. They lock the aggregate and raise SQLSTATE `40001` when stale; the application returns a conflict message and does not retry a human edit automatically. Authorization failures use a uniform unavailable result to avoid cross-user existence disclosure. Validation and state failures return safe localized messages rather than raw database details.
+
 ## Phase 1B commands
 
 - `update_own_profile` is security-invoker and uses the member JWT. It atomically updates private settings and the public card after Zod and active-location validation.

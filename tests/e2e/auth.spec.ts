@@ -1,6 +1,8 @@
 import { expect, test } from '@playwright/test';
 import { randomUUID } from 'node:crypto';
+import { execFileSync } from 'node:child_process';
 import { createClient } from '@supabase/supabase-js';
+import { utcToLocalDateTime } from '@/modules/trips/timezone';
 
 test.skip(
   !process.env.E2E_AUTH_LOCAL,
@@ -48,6 +50,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
   const replacement = `N3wStrong-${randomUUID()}`;
   let changedEmail: string | undefined;
   let userId: string | undefined;
+  let tripId: string | undefined;
   const cspViolations: string[] = [];
   page.on('console', (message) => {
     if (message.text().includes('Content Security Policy'))
@@ -156,6 +159,52 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       .selectOption('90000000-0000-4000-8000-000000000009');
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page).toHaveURL(/\/en\/settings\?error=invalid$/);
+    const departureInstant = new Date(Date.now() + 30 * 86_400_000);
+    const arrivalInstant = new Date(departureInstant.getTime() + 4 * 3_600_000);
+    await page.goto('/en/trips/new');
+    await page.getByLabel('Origin').selectOption({ label: 'Paris, France' });
+    await page
+      .getByLabel('Destination')
+      .selectOption({ label: 'Casablanca, Morocco' });
+    await page
+      .getByLabel('Departure date and time')
+      .fill(utcToLocalDateTime(departureInstant.toISOString(), 'Europe/Paris'));
+    await page
+      .getByLabel('Expected arrival date and time')
+      .fill(
+        utcToLocalDateTime(arrivalInstant.toISOString(), 'Africa/Casablanca'),
+      );
+    await page.getByLabel('Available capacity (kg)').fill('5');
+    await page.getByLabel('Documents').check();
+    await page.getByLabel('Clothing').check();
+    await page.getByRole('button', { name: 'Save draft' }).click();
+    await expect(page).toHaveURL(/\/en\/trips\/[0-9a-f-]+\?notice=created$/);
+    tripId = new URL(page.url()).pathname.split('/').at(-1);
+    expect(tripId).toMatch(/^[0-9a-f-]{36}$/);
+    await page.getByRole('button', { name: 'Publish' }).click();
+    await expect(page).toHaveURL(/notice=published/);
+    await page.getByRole('link', { name: 'View public listing' }).click();
+    await expect(
+      page.getByRole('heading', { name: 'Published trip' }),
+    ).toBeVisible();
+    await expect(
+      page.getByText('Paris, France → Casablanca, Morocco'),
+    ).toBeVisible();
+    await expect(page.getByText(email)).toHaveCount(0);
+    await expect(page.getByText('+33612345678')).toHaveCount(0);
+    await page.goto(`/fr/trips/${tripId}`);
+    await expect(
+      page.getByRole('heading', { name: 'Détails du voyage' }),
+    ).toBeVisible();
+    await page.goto('/ar/trips');
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(page.getByRole('heading', { name: 'رحلاتي' })).toBeVisible();
+    await page.goto(`/en/trips/${tripId}`);
+    await page.getByLabel('Cancellation reason').fill('E2E cleanup');
+    await page.getByRole('button', { name: 'Cancel trip' }).click();
+    await expect(page).toHaveURL(/notice=cancelled/);
+    await expect(page.getByText('Cancelled')).toBeVisible();
+    await page.goto('/en/settings');
     await page.getByRole('button', { name: 'Sign out' }).click();
     await expect(page).toHaveURL(/\/en\/login$/);
     await page.goto('/en/profile');
@@ -213,6 +262,23 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
         process.env.E2E_LOCAL_SECRET_KEY,
         { auth: { persistSession: false, autoRefreshToken: false } },
       );
+      if (tripId && process.env.E2E_LOCAL_DB_URL) {
+        execFileSync(
+          'psql',
+          [
+            process.env.E2E_LOCAL_DB_URL,
+            '-v',
+            'ON_ERROR_STOP=1',
+            '-v',
+            `trip_id=${tripId}`,
+          ],
+          {
+            input:
+              "delete from public.trip_events where trip_id = :'trip_id'::uuid; delete from public.trip_cancellations where trip_id = :'trip_id'::uuid; delete from public.trip_categories where trip_id = :'trip_id'::uuid; delete from public.trips where id = :'trip_id'::uuid;",
+            stdio: ['pipe', 'ignore', 'ignore'],
+          },
+        );
+      }
       if (!userId) {
         const { data } = await admin.auth.admin.listUsers({ perPage: 1000 });
         userId = data.users.find(

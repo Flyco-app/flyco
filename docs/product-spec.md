@@ -1,5 +1,11 @@
 # Flyco product specification
 
+## Phase 1C traveler trips
+
+An active verified member can create a traveler trip draft, edit it, publish it, view its narrow public listing and cancel it with a reason. A trip uses canonical Phase 1B location IDs, timezone-safe route instants, integer-gram capacity and normalized accepted categories. Drafts stay private. Current published trips expose only the reviewed marketplace projection. Restricted or suspended accounts cannot create or publish trips.
+
+Phase 1C does not include delivery requests, matching, reservations, bookings, messaging, payments, reviews, disputes, moderation or administration. A published trip represents planned travel and is not evidence that a traveler, route or carried item has been approved by Flyco.
+
 ## Phase 1B profile and trust boundary
 
 Members have self-only legal/contact settings (first name, last name, preferred language and E.164 phone), and a separate public marketplace card (display name, short bio, avatar and selected canonical residence). Public pages never expose email, phone, legal names, account controls or verification attempt details. Objective trust indicators are public and system controlled. Locations are selected from Flyco's normalized catalog.

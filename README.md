@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1B profile, trust and location foundation.** Supabase Auth, hosted email flows, distributed auth throttling, private account profiles, public member cards, avatars, objective trust indicators, identity-attempt records and normalized locations are implemented. Listings, bookings, matching, payments and admin features are not implemented. No production data or live payment is used.
+**Current scope: Phase 1C traveler trips.** Supabase Auth, account security, profiles, public member cards, trust/identity foundations, normalized locations and versioned traveler trips are implemented. Delivery requests, matching, bookings, messaging, payments, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
 
 ## Architecture
 

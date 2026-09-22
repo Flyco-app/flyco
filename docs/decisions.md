@@ -1,5 +1,14 @@
 # Authentication and authorization
 
+## Phase 1C decisions
+
+| ID  | Decision                                                                       | Reason / reconsider when                                                                                                                       |
+| --- | ------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| A16 | Use reference rows plus `trip_categories`, not an enum or delimited column     | Stable codes remain relational and can be deactivated without rewriting history; revisit only if policy requires versioned category taxonomies |
+| A17 | Keep the trip aggregate owner-only and expose `get_public_trip`                | Prevents field-level leakage of versions, cancellation and audit data while retaining a simple Data API boundary                               |
+| A18 | Convert location-local input server-side and reject DST ambiguity              | Avoids silently choosing the wrong instant; revisit when UX offers an explicit UTC-offset choice for repeated times                            |
+| A19 | Hide departed trips by query predicate and provide bounded expiration commands | Correctness does not depend on cron availability; add a trusted scheduler when operational job infrastructure is approved                      |
+
 ## Phase 1B profile boundary
 
 Keep `profiles` private and self-readable, and publish a deliberately narrow `member_profiles` card instead of exposing a view over a table that also carries account controls and contact details. Objective trust values live in a read-only projection; members cannot write counters or verification flags. Avatars use a public bucket because member cards need public image reads, while Storage writes and profile references are both constrained to the authenticated member UUID. Locations use Flyco UUIDs as canonical identity; provider IDs live in a private mapping so a later geocoder can be replaced. Unverified phone numbers are not unique because allowing an unverified claim to reserve a number would permit denial of service.

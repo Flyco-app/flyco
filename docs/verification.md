@@ -1,5 +1,13 @@
 # Foundation verification record
 
+## Phase 1C local verification (2026-09-22)
+
+Phase 1C is implemented on `codex/phase-1c-traveler-trips` and has completed its local pre-promotion gate. Frozen dependency installation, formatting, zero-warning lint, strict typecheck, 62 Vitest tests, scoped coverage, a Next.js production build and four Chromium tests pass. The browser suite covers authenticated draft creation, publication, the narrow public view, French rendering, Arabic RTL and cancellation.
+
+The local Supabase stack passes reset, database lint, 102 pgTAP assertions, 21 rolled-back schema-reference checks, the Auth lifecycle, the Phase 1B profile/Storage authorization suite and the Phase 1C direct Data API suite. Trip checks cover owner-only drafts, anonymous base-table denial, cross-user mutation denial, direct owner/status forgery denial, active-account enforcement, canonical locations, category validation, lifecycle commands, stale-version rejection, narrow public fields, expiration and audit events. Synthetic local users and trip rows were deleted by the test runners.
+
+The repository scanner checks both the working tree and every reachable Git blob. It passes, and an independent Gitleaks 8.30.1 history scan over 28 commits also found no leaks. These results do not yet claim remote CI, migration, Vercel Preview or hosted staging verification; those promotion gates are recorded here only after they complete. Production was not queried or changed.
+
 ## Phase 1B verification
 
 Local verification on `codex/phase-1b-profile-trust-locations` passes formatting, lint, strict typecheck, 57 unit tests, secret scan, database reset/lint, 63 pgTAP assertions, and live local Data API plus Storage checks. Those checks cover private/public field separation, ownership transfer, forged trust and verification fields, phone invalidation, normalized-location mutation denial, identity attempt transitions, public avatar reads, owner writes, cross-user writes and cross-user avatar references. The macOS sandbox cannot run the native Turbopack build because its worker cannot bind an internal loopback port; Linux CI is the authoritative production-build and Playwright environment.

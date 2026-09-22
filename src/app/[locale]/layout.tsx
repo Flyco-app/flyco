@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { dictionaries } from '@/lib/auth/dictionaries';
 import { localeSchema } from '@/lib/auth/validation';
+import { tripCopy } from '@/modules/trips/copy';
 
 export default async function LocaleLayout({
   children,
@@ -22,6 +23,9 @@ export default async function LocaleLayout({
       <nav className="flex items-center justify-between">
         <Link className="font-semibold" href={`/${locale}`}>
           Flyco
+        </Link>
+        <Link href={`/${locale}/trips`}>
+          {tripCopy[locale as keyof typeof tripCopy].myTrips}
         </Link>
         <span className="flex gap-3 text-sm">
           <Link href="/fr">FR</Link>

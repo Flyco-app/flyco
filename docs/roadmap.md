@@ -22,7 +22,7 @@ Each phase is independently reviewable and must pass its own security, database,
 
 **Definition of done:** exact-head CI, pgTAP and direct Data API/Storage authorization checks, staging migration and hosted verification, synthetic-data cleanup, accurate documentation and no production change.
 
-## Phase 1C — traveler trips
+## Phase 1C — traveler trips (implemented, verification in progress)
 
 **Objective:** let an authenticated, active member create and manage a trip using normalized locations and explicit capacity/category constraints.
 
