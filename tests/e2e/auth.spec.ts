@@ -109,7 +109,29 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     );
     await replayContext.close();
     await expect(page.getByText('Test Member')).toBeVisible();
-    await page.getByRole('link', { name: 'Account settings' }).click();
+    const accountNav = page.getByRole('navigation');
+    await expect(
+      accountNav.getByRole('link', { name: 'Flyco' }),
+    ).toHaveAttribute('href', '/en/profile');
+    await expect(
+      accountNav.getByRole('link', { name: 'Profile' }),
+    ).toBeVisible();
+    await expect(
+      accountNav.getByRole('link', { name: 'Account settings' }),
+    ).toBeVisible();
+    await expect(
+      accountNav.getByRole('link', { name: 'My trips' }),
+    ).toBeVisible();
+    await expect(
+      accountNav.getByRole('link', { name: 'My delivery requests' }),
+    ).toBeVisible();
+    await accountNav.getByRole('link', { name: 'My trips' }).click();
+    await expect(page).toHaveURL(/\/en\/trips$/);
+    await accountNav.getByRole('link', { name: 'Profile' }).click();
+    await expect(page).toHaveURL(/\/en\/profile$/);
+    await expect(page.getByText('Test Member')).toBeVisible();
+    await accountNav.getByRole('link', { name: 'Account settings' }).click();
+    await expect(page).toHaveURL(/\/en\/settings$/);
     await page.getByLabel('Display name').fill('Updated Member');
     await page.getByLabel('First name').fill('Updated');
     await page.getByLabel('Last name').fill('Member');
@@ -119,15 +141,17 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       .getByLabel('City of residence')
       .selectOption({ label: 'Paris, France' });
     await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page).toHaveURL(/\/en\/settings\?notice=saved$/);
     await expect(page.getByLabel('Display name')).toHaveValue('Updated Member');
     await expect(page.getByLabel('Phone (E.164)')).toHaveValue('+33612345678');
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64',
+    );
     await page.getByLabel('Profile photo').setInputFiles({
       name: 'ignored-original-name.png',
       mimeType: 'image/png',
-      buffer: Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-        'base64',
-      ),
+      buffer: Buffer.concat([png, Buffer.alloc(1280 * 1024 - png.byteLength)]),
     });
     await page.getByRole('button', { name: 'Upload photo' }).click();
     await expect(page).toHaveURL(/\/en\/settings\?notice=avatar-saved$/);
@@ -147,6 +171,20 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     ).toBeVisible();
     await page.goto('/ar/settings');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(
+      page.getByRole('navigation').getByRole('link', { name: 'الملف الشخصي' }),
+    ).toBeVisible();
+    await expect(
+      page
+        .getByRole('navigation')
+        .getByRole('link', { name: 'إعدادات الحساب' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('navigation').getByRole('link', { name: 'رحلاتي' }),
+    ).toBeVisible();
+    await expect(
+      page.getByRole('navigation').getByRole('link', { name: 'طلبات الإرسال' }),
+    ).toBeVisible();
     await expect(page.getByLabel('الاسم الأول')).toHaveValue('Updated');
     await page.goto('/en/settings');
     await page.getByLabel('City of residence').evaluate((select) => {

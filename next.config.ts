@@ -3,6 +3,12 @@ import type { NextConfig } from 'next';
 const nextConfig: NextConfig = {
   poweredByHeader: false,
   reactStrictMode: true,
+  experimental: {
+    serverActions: {
+      // 2 MiB avatar limit plus bounded multipart/form-data overhead.
+      bodySizeLimit: 2 * 1024 * 1024 + 128 * 1024,
+    },
+  },
   async headers() {
     return [
       {

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
+import nextConfig from '../../next.config';
 import { phoneMatchesCountry, profileSchema } from '@/lib/auth/validation';
-import { hasValidAvatarSignature, validateAvatar } from '@/lib/profile/avatar';
+import {
+  avatarMaxBytes,
+  hasValidAvatarSignature,
+  validateAvatar,
+} from '@/lib/profile/avatar';
 import {
   normalizedLocationSchema,
   UnconfiguredGeocodingProvider,
@@ -43,21 +48,35 @@ describe('Phase 1B profile boundaries', () => {
   });
 
   it('validates size, MIME and magic bytes rather than filenames', async () => {
-    const png = new File(
-      [
-        new Uint8Array([
-          0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0,
-        ]),
-      ],
-      'payload.exe',
-      { type: 'image/png' },
-    );
+    const signature = new Uint8Array([
+      0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a, 0, 0, 0, 0,
+    ]);
+    const png = new File([signature], 'payload.exe', { type: 'image/png' });
     const metadata = validateAvatar(png);
     expect(metadata).toEqual({ mime: 'image/png', extension: 'png' });
     expect(await hasValidAvatarSignature(png, 'image/png')).toBe(true);
     expect(
       validateAvatar(new File(['x'], 'x.svg', { type: 'image/svg+xml' })),
     ).toBeNull();
+
+    const atLimit = new File(
+      [signature, new Uint8Array(avatarMaxBytes - signature.byteLength)],
+      'at-limit.png',
+      { type: 'image/png' },
+    );
+    const overLimit = new File(
+      [signature, new Uint8Array(avatarMaxBytes + 1 - signature.byteLength)],
+      'over-limit.png',
+      { type: 'image/png' },
+    );
+    expect(validateAvatar(atLimit)).toEqual({
+      mime: 'image/png',
+      extension: 'png',
+    });
+    expect(validateAvatar(overLimit)).toBeNull();
+    expect(nextConfig.experimental?.serverActions?.bodySizeLimit).toBe(
+      avatarMaxBytes + 128 * 1024,
+    );
   });
 
   it('validates provider-neutral locations and fails explicitly without a provider', async () => {
