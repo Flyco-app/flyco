@@ -1,5 +1,11 @@
 # Flyco product specification
 
+## Phase 1D sender delivery requests
+
+An active verified member can create one declared shipment item with a canonical route, flexible date window, exact weight/dimensions, declaration and private photos; edit the aggregate; publish a narrow opportunity; and cancel with a reason. The same category codes used by traveler trips will support deterministic compatibility later. Photos, declared contents, detailed description and handling notes remain owner-only.
+
+Phase 1D does not decide whether an item is legal or safe to carry. It does not include matching, booking, sharing photos with travelers, messaging, payments, reviews, disputes, moderation or administration.
+
 ## Phase 1C traveler trips
 
 An active verified member can create a traveler trip draft, edit it, publish it, view its narrow public listing and cancel it with a reason. A trip uses canonical Phase 1B location IDs, timezone-safe route instants, integer-gram capacity and normalized accepted categories. Drafts stay private. Current published trips expose only the reviewed marketplace projection. Restricted or suspended accounts cannot create or publish trips.
@@ -10,13 +16,13 @@ Phase 1C does not include delivery requests, matching, reservations, bookings, m
 
 Members have self-only legal/contact settings (first name, last name, preferred language and E.164 phone), and a separate public marketplace card (display name, short bio, avatar and selected canonical residence). Public pages never expose email, phone, legal names, account controls or verification attempt details. Objective trust indicators are public and system controlled. Locations are selected from Flyco's normalized catalog.
 
-Status: Phase 1B profile, trust, avatar, identity-attempt and normalized-location behavior is implemented. Transactional marketplace behavior below remains planned.
+Status: Phase 1B profile, trust, avatar, identity-attempt and normalized-location behavior is implemented. Trips and sender requests are implemented as independent listing aggregates; matching and transactions remain planned.
 
 ## Purpose and scope
 
 Flyco connects senders with travelers already going between cities. France ↔ Morocco is the first route market. One verified account may send and travel; there are no permanent sender/traveler account types. A trip destination is not evidence of the traveler's residence or payout eligibility.
 
-V1 supports one traveler, one sender and one delivery request per booking. A request contains one or more declared items; all travel together. No partial fulfillment, multi-leg relay, auctions, dynamic AI pricing or algorithmic identity decisions. Each booking has one currency. French is the default, English and Arabic are required before public launch. Dates show the route city's IANA timezone; store absolute instants in UTC. Arabic requires RTL, logical spacing, bidi-isolated IDs, and native-language review.
+V1 supports one traveler, one sender and one delivery request per booking. A request contains one declared shipment item record with a quantity; all units travel together. No partial fulfillment, multi-leg relay, auctions, dynamic AI pricing or algorithmic identity decisions. Each booking has one currency. French is the default, English and Arabic are required before public launch. Dates show the route city's IANA timezone; store absolute instants in UTC. Arabic requires RTL, logical spacing, bidi-isolated IDs, and native-language review.
 
 ## Capabilities and acceptance boundaries
 

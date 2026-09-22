@@ -1,5 +1,13 @@
 # API and state design
 
+## Phase 1D delivery request commands
+
+The application exposes Server Actions backed by member-JWT RPCs: `create_delivery_request_draft`, `update_delivery_request`, `publish_delivery_request`, `cancel_delivery_request`, `begin_item_photo_upload`, `finalize_item_photo_upload` and `remove_item_photo`. Every mutation validates authenticated active-account state, derives the actor, locks the request and checks its expected version. Request creation writes the item and audit event in one transaction. Public reads use only `get_public_delivery_request`; owner pages query owner-RLS base rows.
+
+Photo upload is a reservation/finalization protocol. The begin command creates a database-generated pending path and consumes an aggregate version; Storage accepts only that exact pending row. The application validates bytes before upload. Finalize requires the returned current version and object presence, then marks the photo ready and audits it. Removal first revokes metadata visibility and audits under the lock, then deletes the private object. Storage failure is surfaced for retry.
+
+The delivery request state machine is `draft → published`, `draft|published → cancelled` and `published → expired`. Terminal states cannot be edited or reactivated. Published route endpoints cannot change. Public queries also require `latest_delivery_at > now()`, so scheduler lag cannot expose an ended request.
+
 ## Phase 1C trip commands
 
 The Next.js Server Actions validate localized form input, resolve canonical location timezones, convert unambiguous local times to UTC and invoke member-JWT RPCs. The database commands are `create_trip_draft`, `update_trip`, `publish_trip`, `cancel_trip` and `expire_own_departed_trips`. `get_public_trip` is the anonymous/authenticated read projection. There is no generic trip PATCH or client-selectable status field.

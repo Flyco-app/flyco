@@ -1,5 +1,11 @@
 # Database model and access design
 
+## Phase 1D implemented schema
+
+`delivery_requests` owns the canonical route, flexible UTC window, lifecycle and optimistic version. `declared_items` is a one-to-one V1 declaration containing one stable category, exact integer measurements, content fields and handling metadata. `item_photos` authorizes pending/ready/deleted private Storage objects. Cancellations and append-only events are separate tables.
+
+All account/location/category foreign keys use `ON DELETE RESTRICT`. Request, item, cancellation, photo and event foreign keys are indexed where they are not already covered by a unique/primary key. Checks enforce different locations, ordered windows no longer than 90 days, positive versions, valid state timestamps, 1–50,000 grams, all-or-none 1–2,000 mm dimensions, bounded quantity and trimmed content. See [delivery requests](delivery-requests.md).
+
 ## Phase 1C implemented schema
 
 `item_categories` is active read-only reference data. `trips` owns the route, UTC instants, offered capacity, lifecycle and optimistic version. `trip_categories` normalizes accepted categories. `trip_cancellations` keeps the owner-only reason separate from discovery. `trip_events` is append-only from controlled commands.

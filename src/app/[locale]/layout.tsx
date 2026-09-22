@@ -3,6 +3,7 @@ import { notFound } from 'next/navigation';
 import { dictionaries } from '@/lib/auth/dictionaries';
 import { localeSchema } from '@/lib/auth/validation';
 import { tripCopy } from '@/modules/trips/copy';
+import { requestCopy } from '@/modules/delivery-requests/copy';
 
 export default async function LocaleLayout({
   children,
@@ -20,12 +21,15 @@ export default async function LocaleLayout({
       dir={locale === 'ar' ? 'rtl' : 'ltr'}
       className="mx-auto min-h-svh max-w-lg space-y-5 px-6 py-12"
     >
-      <nav className="flex items-center justify-between">
+      <nav className="flex flex-wrap items-center justify-between gap-3">
         <Link className="font-semibold" href={`/${locale}`}>
           Flyco
         </Link>
         <Link href={`/${locale}/trips`}>
           {tripCopy[locale as keyof typeof tripCopy].myTrips}
+        </Link>
+        <Link href={`/${locale}/delivery-requests`}>
+          {requestCopy[locale as keyof typeof requestCopy].myRequests}
         </Link>
         <span className="flex gap-3 text-sm">
           <Link href="/fr">FR</Link>

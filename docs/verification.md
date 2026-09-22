@@ -1,5 +1,13 @@
 # Foundation verification record
 
+## Phase 1D local verification (2026-09-22)
+
+Phase 1D is implemented on `codex/phase-1d-delivery-requests`. Formatting, zero-warning lint, strict typecheck, 74 Vitest tests and a clean Next.js production build pass. Four Chromium tests pass, including the full authenticated lifecycle and delivery request draft, private photo add/remove, publish, narrow public view, French navigation, Arabic RTL and cancellation.
+
+The local database resets from migrations and passes database lint plus 158 pgTAP assertions. The Phase 1D pgTAP suite covers constraints, active-account enforcement, owner/other/anonymous access, direct owner/status/audit forgery, lifecycle commands, public projection, optimistic concurrency, photo reservation authorization, MIME/size/count limits and expiration. A direct Data API/Storage runner confirms owner-only base rows, cross-user denial, private signed URLs, unsafe-path denial, photo cleanup and restricted-account publication denial. Its synthetic users and rows are deleted.
+
+Staging migration, exact-head GitHub CI, Git-backed Preview verification, hosted synthetic cleanup and the final reachable-history scan are pending until the Phase 1D PR head is fixed. Production has not been queried or modified.
+
 ## Phase 1C local verification (2026-09-22)
 
 Phase 1C is implemented on `codex/phase-1c-traveler-trips`. Frozen dependency installation, formatting, zero-warning lint, strict typecheck, 69 Vitest tests, scoped coverage, a Next.js production build and four Chromium tests pass. The browser suite covers authenticated draft creation, publication, the narrow public view, French rendering, Arabic RTL and cancellation.

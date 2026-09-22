@@ -1,5 +1,13 @@
 # Authentication and authorization
 
+## Phase 1D request and item boundary
+
+Delivery request base tables are owner-only under RLS and explicit SELECT column grants. Application roles have no direct write privilege. Security-definer commands use an empty search path, derive `auth.uid()`, require a live active profile, enforce ownership/state/version under a row lock and append controlled audit rows. The anonymous/authenticated discovery surface is a fixed return table that omits private declaration fields, photos, paths, versions, cancellations, audit and account controls.
+
+Item photos use a separate private bucket. A Storage INSERT must match a database-generated pending photo reservation belonging to the JWT owner; ready SELECT and deleted-object cleanup recheck ownership through request/item relations. The server validates allowlisted MIME, size and file signatures and never uses the original filename. Five-minute signed URLs are created only after an owner-authorized query. Phase 1D does not scan images for malware or prohibited visual content, so no traveler or public access may be added before a reviewed scanning/quarantine step.
+
+Direct PostgREST and Storage tests cover anonymous denial, cross-user request/item/photo denial, owner/status/audit forgery, unsafe paths, private signed URL denial and stale mutations. Public-field key assertions guard against projection growth.
+
 ## Phase 1C trip security
 
 Trip tables grant no member writes. Fixed-search-path command functions derive ownership from `auth.uid()`, require a live active profile, lock the aggregate, validate expected version and lifecycle, then update categories and audit records in the same transaction. Client owner IDs, statuses, lifecycle timestamps and audit payloads are never accepted. Direct PostgREST tests cover owner, other member and anonymous access.

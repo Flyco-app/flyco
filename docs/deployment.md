@@ -2,7 +2,7 @@
 
 ## Git-backed previews
 
-The existing Vercel `flyco` project is connected to `Flyco-app/flyco`. Pull requests create a preview and report commit status; no second project or deploy hook is needed. `vercel.json` must not disable Git deployments. A Phase 1C preview is accepted only after its deployment identifies the exact PR head and uses staging Supabase configuration. Repository migrations remain the schema source of truth. Supabase/Vercel integration presence does not authorize automatic production migrations, database branching or promotion.
+The existing Vercel `flyco` project is connected to `Flyco-app/flyco`. Pull requests create a preview and report commit status; no second project or deploy hook is needed. `vercel.json` must not disable Git deployments. A feature preview is accepted only after its deployment identifies the exact PR head and uses staging Supabase configuration. Repository migrations remain the schema source of truth. Supabase/Vercel integration presence does not authorize automatic production migrations, database branching or promotion.
 
 ## Environment registry
 
@@ -73,4 +73,4 @@ Hosted verification must use synthetic accounts and delete them afterward. It mu
 
 Migration `20260921150257_phase_1b_profiles_trust_locations` was applied only to staging project `xivkbucvwsioxevlijzj` after local reset, lint, pgTAP and direct Data API/Storage checks. The immutable verification deployment was `dpl_7m6DmmBsqVTVqUcC238mpUsxSVot`, served through `https://flyco-staging.vercel.app`. Hosted checks used one synthetic account and confirmed authenticated profile editing, the restricted public projection, trust display, location selection, Arabic RTL and security headers. That exact Auth account was permanently deleted after the check. Production project `mcmeroatheonlgxvveyl` remains untouched.
 
-The current Vercel project is deployed through the authenticated CLI and is not Git-connected. Until a supported Git integration and enforceable release controls are available, each staging promotion must record the Git head, immutable deployment ID/URL and CI result before moving the stable alias. This manual link is an operational risk and is not suitable as a production release control.
+The existing Vercel project is Git-connected. Each staging promotion still records the Git head, immutable deployment ID/URL and CI result before moving any stable alias. The free-plan review controls remain procedural and are not sufficient for production promotion.
