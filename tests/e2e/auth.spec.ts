@@ -119,15 +119,17 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       .getByLabel('City of residence')
       .selectOption({ label: 'Paris, France' });
     await page.getByRole('button', { name: 'Save' }).click();
+    await expect(page).toHaveURL(/\/en\/settings\?notice=saved$/);
     await expect(page.getByLabel('Display name')).toHaveValue('Updated Member');
     await expect(page.getByLabel('Phone (E.164)')).toHaveValue('+33612345678');
+    const png = Buffer.from(
+      'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
+      'base64',
+    );
     await page.getByLabel('Profile photo').setInputFiles({
       name: 'ignored-original-name.png',
       mimeType: 'image/png',
-      buffer: Buffer.from(
-        'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
-        'base64',
-      ),
+      buffer: Buffer.concat([png, Buffer.alloc(1280 * 1024 - png.byteLength)]),
     });
     await page.getByRole('button', { name: 'Upload photo' }).click();
     await expect(page).toHaveURL(/\/en\/settings\?notice=avatar-saved$/);
