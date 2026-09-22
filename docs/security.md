@@ -6,6 +6,8 @@ Trip tables grant no member writes. Fixed-search-path command functions derive o
 
 Base trips are owner-readable only. Public discovery calls a narrow, parameterized `get_public_trip` projection that returns only current published records and deliberately excludes versions, cancellation reasons, internal lifecycle timestamps and events. Public traveler information comes from the existing member/trust projections; email, phone, account controls and moderation data are not joined. Departed trips fail the public predicate even before background expiration runs.
 
+Server Actions accept the configured application origin and, on a Vercel Preview only, the exact system-provided `VERCEL_URL` origin. Both paths still require an exact Origin/Host pair. Client-supplied forwarded hosts, non-Vercel domains, malformed labels and production deployments cannot expand this allowlist. Redirect and authentication email destinations continue to use the configured stable application URL.
+
 ## Phase 1B visibility and mutation rules
 
 `member_profiles` exposes only display name, avatar path, bio, residence and account age. `profile_trust` exposes objective indicators. `profiles` remains self-only and contains preferred language, legal names, phone and account controls. Identity attempts/events are self-readable; provider references and raw identity evidence are not exposed or stored. Column grants prevent writes to account status, phone verification, trust, provider state, reason codes or review timestamps.
