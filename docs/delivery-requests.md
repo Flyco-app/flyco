@@ -38,3 +38,7 @@ Authenticated members can select only their own base request, item, photo metada
 `get_public_delivery_request(id)` is the only public request representation. For a currently viable published request it returns the request/sender references, canonical route, date window, category, safe title, integer measurements, quantity and fragile flag. It excludes description, declared contents, handling notes, photos and paths, version, account controls, cancellation data and audit history.
 
 Create, draft/published edit, publish, photo add/remove, cancel and expire create `delivery_request_events`. Event metadata contains only the photo UUID where applicable. A bounded unexposed worker command and owner-scoped opportunistic command persist expiry, while the public projection independently filters ended windows so correctness does not depend on a scheduler.
+
+## Phase 1H sender declaration
+
+Publication requires four unchecked confirmations covering declaration accuracy, the platform prohibited-item policy, packaging and possible cross-border obligations. The command accepts only a boolean and records the server-controlled `sender-safety-2026-09-v1` version in the same transaction. Evidence references the resulting request version and members cannot write it directly. See `docs/policy-safety.md`.

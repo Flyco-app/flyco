@@ -35,6 +35,29 @@ for (const locale of ['fr', 'en', 'ar']) {
   }
 }
 
+test('policy, privacy and help routes are localized and accessible', async ({
+  page,
+}) => {
+  await page.goto('/en/safety');
+  await expect(
+    page.getByRole('heading', { name: 'Items we do not allow' }),
+  ).toBeVisible();
+  await expect(page.getByText(/not an exhaustive statement/)).toBeVisible();
+  await page.goto('/en/terms');
+  await expect(
+    page.getByText(/professional legal review is required/),
+  ).toBeVisible();
+  await page.goto('/en/privacy');
+  await expect(
+    page.getByRole('heading', { name: 'Privacy — pre-launch structure' }),
+  ).toBeVisible();
+  await page.goto('/ar/help');
+  await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+  await expect(
+    page.getByRole('heading', { name: 'كيف يمكننا مساعدتك؟' }),
+  ).toBeVisible();
+});
+
 test('keyboard skip link and unavailable page are recoverable', async ({
   page,
 }) => {

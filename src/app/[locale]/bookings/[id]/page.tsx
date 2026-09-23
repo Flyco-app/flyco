@@ -4,6 +4,7 @@ import { DestructiveSection } from '@/components/ui/patterns';
 import { StatusBadge } from '@/components/ui/patterns';
 import { SubmitButton } from '@/components/ui/submit-button';
 import Link from 'next/link';
+import Image from 'next/image';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
 import {
@@ -15,6 +16,7 @@ import { bookingCopy, bookingStatusLabel } from '@/modules/bookings/copy';
 import { loadBooking } from '@/modules/bookings/queries';
 import { bookingIdSchema } from '@/modules/bookings/validation';
 import { formatWeight } from '@/modules/delivery-requests/validation';
+import { policyCopy } from '@/modules/policy/config';
 
 function CommandFields({
   locale,
@@ -49,6 +51,7 @@ export default async function BookingPage({
   const proposed = booking.status === 'proposed';
   const cancellable = proposed || booking.status === 'accepted';
   const u = uiCopy[locale];
+  const policy = policyCopy[locale];
   const formatDate = (value: string) =>
     new Intl.DateTimeFormat(locale, {
       dateStyle: 'medium',
@@ -127,6 +130,49 @@ export default async function BookingPage({
         )}
         <p className="text-sm">{d.capacityNotice}</p>
       </div>
+      <section
+        className="space-y-3 rounded-xl border p-4"
+        aria-labelledby="item-details-title"
+      >
+        <div>
+          <h2 id="item-details-title" className="font-semibold">
+            {policy.description}
+          </h2>
+          <p className="text-sm text-muted-foreground">
+            {policy.participantInfo}
+          </p>
+        </div>
+        <p>{booking.item_description}</p>
+        <div>
+          <strong>{policy.declaredContents}</strong>
+          <p>{booking.declared_contents}</p>
+        </div>
+        {booking.handling_notes && (
+          <div>
+            <strong>{policy.handling}</strong>
+            <p>{booking.handling_notes}</p>
+          </div>
+        )}
+        {booking.itemPhotos.length > 0 && (
+          <div>
+            <strong>{policy.photos}</strong>
+            <ul className="grid grid-cols-2 gap-3 pt-2">
+              {booking.itemPhotos.map((photo) => (
+                <li key={photo.id}>
+                  <Image
+                    src={photo.signedUrl}
+                    alt=""
+                    width={320}
+                    height={240}
+                    unoptimized
+                    className="h-32 w-full rounded-lg object-cover"
+                  />
+                </li>
+              ))}
+            </ul>
+          </div>
+        )}
+      </section>
       <section className="space-y-4 rounded-xl border p-4">
         <h2 className="font-semibold">{u.timeline}</h2>
         <ol className="timeline">
@@ -140,13 +186,29 @@ export default async function BookingPage({
         <p className="text-sm text-muted-foreground">{u.utc}</p>
       </section>
       {proposed && booking.role === 'traveler' && (
-        <div className="flex gap-3">
-          <form action={acceptBooking}>
+        <div className="grid gap-3">
+          <form
+            action={acceptBooking}
+            className="space-y-3 rounded-xl border p-4"
+          >
             <CommandFields
               locale={locale}
               bookingId={booking.bookingId}
               version={booking.version}
             />
+            <p className="text-sm">{policy.travelerContext}</p>
+            <label className="flex items-start gap-2">
+              <input
+                name="safetyAcknowledged"
+                type="checkbox"
+                required
+                className="mt-1"
+              />
+              <span>{policy.travelerConfirm}</span>
+            </label>
+            <Link href={`/${locale}/safety`} className="text-sm">
+              {policy.safety}
+            </Link>
             <SubmitButton locale={locale} className="button" type="submit">
               {d.accept}
             </SubmitButton>
@@ -182,6 +244,9 @@ export default async function BookingPage({
               bookingId={booking.bookingId}
               version={booking.version}
             />
+            <p className="text-sm text-muted-foreground">
+              {policy.cancellation}
+            </p>
             <label className="grid gap-1">
               <span>{d.reason}</span>
               <input

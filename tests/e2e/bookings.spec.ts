@@ -108,7 +108,9 @@ test('sender proposes and traveler atomically accepts a booking', async ({
     );
     bookingId = new URL(senderPage.url()).pathname.split('/').at(-1);
     expect(bookingId).toMatch(/^[0-9a-f-]{36}$/);
-    await expect(senderPage.getByText('Proposed')).toBeVisible();
+    await expect(
+      senderPage.getByText('Proposed', { exact: true }),
+    ).toBeVisible();
     await expect(senderPage.getByText('E2E Booking Traveler')).toBeVisible();
 
     const travelerPage = await travelerContext.newPage();
@@ -119,6 +121,11 @@ test('sender proposes and traveler atomically accepts a booking', async ({
     ).toBeVisible();
     await travelerPage.getByRole('link', { name: 'View booking' }).click();
     await expect(travelerPage.getByText('Incoming proposal')).toBeVisible();
+    await travelerPage
+      .getByLabel(
+        'I reviewed the available item details and accept the current safety guidance.',
+      )
+      .check();
     await travelerPage.getByRole('button', { name: 'Accept' }).click();
     await expect(travelerPage).toHaveURL(/notice=accepted/);
     await expect(
@@ -147,6 +154,7 @@ test('sender proposes and traveler atomically accepts a booking', async ({
   } finally {
     sql(
       `
+      delete from public.policy_acknowledgements where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid) or delivery_request_id=:'request_id'::uuid;
       delete from public.booking_command_receipts where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid);
       delete from public.booking_events where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid);
       delete from public.capacity_reservations where trip_id=:'trip_id'::uuid;

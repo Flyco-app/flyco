@@ -75,3 +75,7 @@ Implement the separately authorized `/admin` boundary, MFA-enforced staff roles,
 ## Phase 7 — launch hardening
 
 Complete performance/load testing, accessibility review, recovery drills, data retention and deletion workflows, legal/customs content, operational alerts, incident ownership and protected production release controls. Production migration and traffic require a separate explicit launch authorization.
+
+## Phase 1H — policy and safety surfaces
+
+Implemented centralized policy configuration, transactional acknowledgements, participant-only item details/photos, cancellation/customs/privacy guidance, and localized Help/Safety/draft Terms/draft Privacy routes. Release remains blocked on professional review and an intentional support channel. Phase 1I should focus on messaging and safety-reporting foundations without payments or handoff.

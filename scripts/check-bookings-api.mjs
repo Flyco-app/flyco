@@ -122,6 +122,7 @@ try {
         await client.rpc('publish_delivery_request', {
           input_request_id: request.data,
           input_expected_version: 1,
+          input_policy_acknowledged: true,
         })
       ).error,
       null,
@@ -174,11 +175,13 @@ try {
       input_booking_id: bookingIds[0],
       input_expected_version: 1,
       input_idempotency_key: randomUUID(),
+      input_policy_acknowledged: true,
     }),
     traveler.rpc('accept_booking', {
       input_booking_id: bookingIds[1],
       input_expected_version: 1,
       input_idempotency_key: randomUUID(),
+      input_policy_acknowledged: true,
     }),
   ]);
   const outcomes = [first, second];
@@ -220,7 +223,7 @@ try {
       [status.DB_URL, '-v', 'ON_ERROR_STOP=1', '-v', `trip_id=${tripId}`],
       {
         input:
-          "delete from public.booking_command_receipts where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.booking_events where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.capacity_reservations where trip_id=:'trip_id'::uuid; delete from public.bookings where trip_id=:'trip_id'::uuid; delete from public.matches where trip_id=:'trip_id'::uuid; delete from public.delivery_request_events where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.declared_items where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%'); delete from public.trip_events where trip_id=:'trip_id'::uuid; delete from public.trip_categories where trip_id=:'trip_id'::uuid; delete from public.trips where id=:'trip_id'::uuid;",
+          "delete from public.policy_acknowledgements where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid) or delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.booking_command_receipts where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.booking_events where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.capacity_reservations where trip_id=:'trip_id'::uuid; delete from public.bookings where trip_id=:'trip_id'::uuid; delete from public.matches where trip_id=:'trip_id'::uuid; delete from public.delivery_request_events where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.declared_items where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%'); delete from public.trip_events where trip_id=:'trip_id'::uuid; delete from public.trip_categories where trip_id=:'trip_id'::uuid; delete from public.trips where id=:'trip_id'::uuid;",
         stdio: ['pipe', 'ignore', 'ignore'],
       },
     );

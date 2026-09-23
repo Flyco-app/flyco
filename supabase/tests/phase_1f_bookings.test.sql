@@ -28,6 +28,8 @@ values
  ('73000000-0000-4000-8000-000000000001','72000000-0000-4000-8000-000000000001','documents','Sender A papers','Signed documents in an envelope.','Two signed contracts',3000,1,false),
  ('73000000-0000-4000-8000-000000000002','72000000-0000-4000-8000-000000000002','documents','Sender B papers','Signed documents in an envelope.','Two signed contracts',3000,1,false),
  ('73000000-0000-4000-8000-000000000003','72000000-0000-4000-8000-000000000003','documents','Expiring papers','Signed documents in an envelope.','One signed contract',1000,1,false);
+insert into public.item_photos(id,item_id,storage_path,mime_type,size_bytes,status,ready_at)
+values('73100000-0000-4000-8000-000000000001','73000000-0000-4000-8000-000000000001','70000000-0000-4000-8000-000000000002/73000000-0000-4000-8000-000000000001/73100000-0000-4000-8000-000000000001.jpg','image/jpeg',1024,'ready',now());
 
 update public.matches set id=case delivery_request_id
   when '72000000-0000-4000-8000-000000000001' then '73500000-0000-4000-8000-000000000001'::uuid
@@ -63,36 +65,48 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000004',true);
 select is((select count(*)::integer from public.get_my_bookings(25,0)),0,'Third party cannot list participant bookings');
 select is((select count(*)::integer from public.get_booking((select id from booking_test_ids where label='a'))),0,'Third party cannot read a booking by ID');
-select throws_ok($$select * from public.accept_booking((select id from booking_test_ids where label='a'),1,'74000000-0000-4000-8000-000000000003')$$,'42501','booking unavailable','Third party cannot accept');
+select is((select count(*)::integer from public.get_booking_item_photos((select id from booking_test_ids where label='a'))),0,'Third party cannot obtain private booking photo paths');
+select throws_ok($$select * from public.accept_booking((select id from booking_test_ids where label='a'),1,'74000000-0000-4000-8000-000000000003',true)$$,'42501','booking unavailable','Third party cannot accept');
 reset role;
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000001',true);
 select throws_ok($$select * from public.accept_booking(
  (select id from booking_test_ids where label='a'),99,
- '74000000-0000-4000-8000-000000000010')$$,'40001','stale booking version','Stale acceptance is rejected before capacity changes');
+ '74000000-0000-4000-8000-000000000010',true)$$,'40001','stale booking version','Stale acceptance is rejected before capacity changes');
 reset role;
 update public.profiles set account_status='restricted' where id='70000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000001',true);
 select throws_ok($$select * from public.accept_booking(
  (select id from booking_test_ids where label='a'),1,
- '74000000-0000-4000-8000-000000000011')$$,'42501','active account required','Restricted traveler cannot accept a booking');
+ '74000000-0000-4000-8000-000000000011',true)$$,'42501','active account required','Restricted traveler cannot accept a booking');
 reset role;
 update public.profiles set account_status='active' where id='70000000-0000-4000-8000-000000000001';
 set local role authenticated;
 select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000001',true);
+select throws_ok($$select * from public.accept_booking(
+ (select id from booking_test_ids where label='a'),1,
+ '74000000-0000-4000-8000-000000000012',false)$$,'22023','traveler safety acknowledgement required','Traveler acceptance requires explicit safety acknowledgement');
 select is((select status from public.accept_booking(
  (select id from booking_test_ids where label='a'),1,
- '74000000-0000-4000-8000-000000000004')),'accepted','Traveler accepts the first proposal');
+ '74000000-0000-4000-8000-000000000004',true)),'accepted','Traveler accepts the first proposal');
 select is((select status from public.accept_booking(
  (select id from booking_test_ids where label='a'),1,
- '74000000-0000-4000-8000-000000000004')),'accepted','Repeated acceptance with the same key is safe');
+ '74000000-0000-4000-8000-000000000004',true)),'accepted','Repeated acceptance with the same key is safe');
 select throws_ok($$select * from public.accept_booking(
  (select id from booking_test_ids where label='b'),1,
- '74000000-0000-4000-8000-000000000005')$$,'P0001','booking opportunity unavailable','Competing 3000g acceptance cannot oversubscribe remaining 2000g');
+ '74000000-0000-4000-8000-000000000005',true)$$,'P0001','booking opportunity unavailable','Competing 3000g acceptance cannot oversubscribe remaining 2000g');
 reset role;
 select is(private.trip_reserved_capacity('71000000-0000-4000-8000-000000000001'),3000,'Acceptance reserves the declared item weight');
+select is((select policy_version from public.policy_acknowledgements where booking_id=(select id from booking_test_ids where label='a')),'traveler-safety-2026-09-v1','Server records the current traveler safety policy version');
+set local role authenticated;
+select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000001',true);
+select is((select declared_contents from public.get_booking((select id from booking_test_ids where label='a'))),'Two signed contracts','Booking participants can review declared contents');
+select is((select count(*)::integer from public.get_booking_item_photos((select id from booking_test_ids where label='a'))),1,'Booking participant can obtain the authorized private photo');
+reset role;
+select ok(private.can_read_booking_item_photo('70000000-0000-4000-8000-000000000002/73000000-0000-4000-8000-000000000001/73100000-0000-4000-8000-000000000001.jpg','70000000-0000-4000-8000-000000000001'),'Storage helper authorizes the booking traveler');
+select isnt(private.can_read_booking_item_photo('70000000-0000-4000-8000-000000000002/73000000-0000-4000-8000-000000000001/73100000-0000-4000-8000-000000000001.jpg','70000000-0000-4000-8000-000000000004'),true,'Storage helper denies a third party');
 select is((select count(*)::integer from public.capacity_reservations where released_at is null),1,'Exactly one active reservation exists');
 select is((select active from public.matches where delivery_request_id='72000000-0000-4000-8000-000000000002'),false,'Insufficient-capacity match is inactive after reservation');
 
@@ -122,7 +136,7 @@ set local role authenticated;
 select set_config('request.jwt.claim.sub','70000000-0000-4000-8000-000000000001',true);
 select is((select status from public.accept_booking(
  (select id from booking_test_ids where label='expiry'),1,
- '74000000-0000-4000-8000-000000000009')),'expired','Expired proposal cannot be accepted');
+ '74000000-0000-4000-8000-000000000009',true)),'expired','Expired proposal cannot be accepted');
 reset role;
 select is(private.trip_reserved_capacity('71000000-0000-4000-8000-000000000001'),0,'Expired proposal consumes no capacity');
 

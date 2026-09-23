@@ -119,6 +119,7 @@ try {
   const published = await owner.rpc('publish_delivery_request', {
     input_request_id: requestId,
     input_expected_version: 1,
+    input_policy_acknowledged: true,
   });
   assert.equal(published.error, null);
   assert.equal(published.data, 2);
@@ -260,6 +261,7 @@ try {
       await restricted.rpc('publish_delivery_request', {
         input_request_id: restrictedRequestId,
         input_expected_version: 1,
+        input_policy_acknowledged: true,
       })
     ).error?.code,
     '42501',
@@ -274,7 +276,7 @@ try {
       [status.DB_URL, '-v', 'ON_ERROR_STOP=1', '-v', `request_id=${id}`],
       {
         input:
-          "delete from public.delivery_request_events where delivery_request_id=:'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id=:'request_id'::uuid; delete from public.item_photos where item_id in (select id from public.declared_items where delivery_request_id=:'request_id'::uuid); delete from public.declared_items where delivery_request_id=:'request_id'::uuid; delete from public.delivery_requests where id=:'request_id'::uuid;",
+          "delete from public.policy_acknowledgements where delivery_request_id=:'request_id'::uuid; delete from public.delivery_request_events where delivery_request_id=:'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id=:'request_id'::uuid; delete from public.item_photos where item_id in (select id from public.declared_items where delivery_request_id=:'request_id'::uuid); delete from public.declared_items where delivery_request_id=:'request_id'::uuid; delete from public.delivery_requests where id=:'request_id'::uuid;",
         stdio: ['pipe', 'ignore', 'ignore'],
       },
     );

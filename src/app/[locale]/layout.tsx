@@ -7,6 +7,7 @@ import { localeSchema } from '@/lib/auth/validation';
 import { uiCopy } from '@/lib/ui/copy';
 import { LanguageSwitcher, Navigation } from '@/components/navigation';
 import { Icon } from '@/components/ui/icon';
+import { PolicyLinks } from '@/components/policy-page';
 export default async function LocaleLayout({
   children,
   params,
@@ -59,6 +60,7 @@ export default async function LocaleLayout({
           flyco.
         </Link>
         <p>{d.footer}</p>
+        <PolicyLinks locale={locale} />
         <p className="preview-note">{d.stage}</p>
       </footer>
     </div>

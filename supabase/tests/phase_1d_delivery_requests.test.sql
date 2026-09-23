@@ -1,5 +1,5 @@
 begin;
-select plan(56);
+select plan(59);
 
 insert into auth.users (id,email,email_confirmed_at) values
   ('50000000-0000-4000-8000-000000000001','request-owner@example.invalid',now()),
@@ -42,11 +42,14 @@ select throws_ok($$select public.create_delivery_request_draft('20000000-0000-40
 select throws_ok($$select public.create_delivery_request_draft('20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004',now()+interval '1 day',now()+interval '2 days','documents','Valid title','A sufficiently detailed description.','Paper documents inside',1000,10,null,10,1,false,null)$$,'22023','invalid item dimensions','Partial dimensions are rejected');
 select throws_ok($$select public.create_delivery_request_draft('20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004',now()+interval '1 day',now()+interval '2 days','invalid','Valid title','A sufficiently detailed description.','Paper documents inside',1000,null,null,null,1,false,null)$$,'22023','invalid item category','Invalid category is rejected');
 select throws_ok($$select public.create_delivery_request_draft('20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004',now()+interval '1 day',now()+interval '2 days','documents','Valid title','short','tiny',1000,null,null,null,1,false,null)$$,'22023','invalid item declaration','Insufficient declaration is rejected');
-select throws_ok($$select public.publish_delivery_request((select id from request_test_ids where name='main'),99)$$,'40001','stale delivery request version','Stale publish is rejected');
-select is(public.publish_delivery_request((select id from request_test_ids where name='main'),1),2,'Valid publish increments version');
+select throws_ok($$select public.publish_delivery_request((select id from request_test_ids where name='main'),1,false)$$,'22023','sender declaration required','Publishing requires an explicit safety acknowledgement');
+select throws_ok($$select public.publish_delivery_request((select id from request_test_ids where name='main'),99,true)$$,'40001','stale delivery request version','Stale publish is rejected');
+select is(public.publish_delivery_request((select id from request_test_ids where name='main'),1,true),2,'Valid publish increments version');
 select is((select status from public.delivery_requests where id=(select id from request_test_ids where name='main')),'published','Publish changes state');
 select is((select count(*)::integer from public.delivery_request_events where event_type='published'),1,'Publish is audited');
 reset role;
+select is((select policy_version from public.policy_acknowledgements where delivery_request_id=(select id from request_test_ids where name='main')),'sender-safety-2026-09-v1','Server records the current sender policy version');
+select is(has_table_privilege('authenticated','public.policy_acknowledgements','INSERT'),false,'Members cannot forge policy acknowledgements');
 
 set local role anon;
 select throws_ok($$select * from public.delivery_requests$$,'42501',null,'Anonymous base request access is denied');
@@ -103,9 +106,9 @@ reset role;
 set local role authenticated;
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);
 insert into request_test_ids values ('past',public.create_delivery_request_draft('20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004',now()-interval '2 days',now()-interval '1 day','documents','Valid title','A sufficiently detailed description.','Paper documents inside',1000,null,null,null,1,false,null));
-select throws_ok($$select public.publish_delivery_request((select id from request_test_ids where name='past'),1)$$,'22023','delivery window outside publication range','Past request cannot publish');
+select throws_ok($$select public.publish_delivery_request((select id from request_test_ids where name='past'),1,true)$$,'22023','delivery window outside publication range','Past request cannot publish');
 insert into request_test_ids values ('expiry',public.create_delivery_request_draft('20000000-0000-4000-8000-000000000001','20000000-0000-4000-8000-000000000004',now()+interval '2 days',now()+interval '3 days','documents','Valid title','A sufficiently detailed description.','Paper documents inside',1000,null,null,null,1,false,null));
-select is(public.publish_delivery_request((select id from request_test_ids where name='expiry'),1),2,'Expiry fixture publishes');
+select is(public.publish_delivery_request((select id from request_test_ids where name='expiry'),1,true),2,'Expiry fixture publishes');
 reset role;
 update public.delivery_requests set earliest_departure_at=now()-interval '2 days',latest_delivery_at=now()-interval '1 hour' where id=(select id from request_test_ids where name='expiry');
 select is(private.expire_due_delivery_requests(10),1,'Trusted worker expires due request');
@@ -114,7 +117,7 @@ select is((select count(*)::integer from public.delivery_request_events where de
 select is(has_table_privilege('authenticated','public.delivery_requests','INSERT'),false,'Authenticated cannot insert base requests');
 select is(has_table_privilege('authenticated','public.delivery_request_events','INSERT'),false,'Members cannot forge audit events');
 select is((select public from storage.buckets where id='item-photos'),false,'Item photo bucket is private');
-select is((select count(*)::integer from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'item_photos_storage_%'),3,'Storage uses explicit insert/read/delete policies');
+select is((select count(*)::integer from pg_policies where schemaname='storage' and tablename='objects' and policyname like 'item_photos_storage_%'),4,'Storage uses explicit owner and booking-participant policies');
 
 set local role authenticated;
 select set_config('request.jwt.claim.sub','50000000-0000-4000-8000-000000000001',true);

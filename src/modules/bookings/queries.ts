@@ -29,6 +29,11 @@ type RawBooking = {
   offered_capacity_grams: number;
   reserved_trip_capacity_grams: number;
   available_capacity_grams: number;
+  item_description: string;
+  declared_contents: string;
+  handling_notes: string | null;
+  fragile: boolean;
+  quantity: number;
 };
 
 export type Booking = Omit<
@@ -38,6 +43,7 @@ export type Booking = Omit<
   bookingId: string;
   role: 'sender' | 'traveler';
   status: BookingStatus;
+  itemPhotos: { id: string; signedUrl: string }[];
 };
 
 function mapBooking(row: RawBooking): Booking {
@@ -54,6 +60,7 @@ function mapBooking(row: RawBooking): Booking {
     bookingId: booking_id,
     role: participant_role as Booking['role'],
     status: status as BookingStatus,
+    itemPhotos: [],
     ...rest,
   };
 }
@@ -78,5 +85,22 @@ export async function loadBooking(
   });
   if (result.error) throw new Error('Unable to load booking.');
   const row = (result.data as RawBooking[])[0];
-  return row ? mapBooking(row) : null;
+  if (!row) return null;
+  const booking = mapBooking(row);
+  const photos = await client.rpc('get_booking_item_photos', {
+    input_booking_id: bookingId,
+  });
+  if (photos.error) throw new Error('Unable to load booking item photos.');
+  const signed = await Promise.all(
+    (photos.data as { photo_id: string; storage_path: string }[]).map(
+      async (photo) => {
+        const result = await client.storage
+          .from('item-photos')
+          .createSignedUrl(photo.storage_path, 300);
+        if (result.error) throw new Error('Unable to load booking item photo.');
+        return { id: photo.photo_id, signedUrl: result.data.signedUrl };
+      },
+    ),
+  );
+  return { ...booking, itemPhotos: signed };
 }

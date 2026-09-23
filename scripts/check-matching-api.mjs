@@ -116,6 +116,7 @@ try {
       await sender.rpc('publish_delivery_request', {
         input_request_id: requestId,
         input_expected_version: 1,
+        input_policy_acknowledged: true,
       })
     ).error,
     null,
@@ -231,7 +232,7 @@ try {
       ],
       {
         input:
-          "delete from public.matches where trip_id=:'trip_id'::uuid or delivery_request_id=:'request_id'::uuid; delete from public.trip_events where trip_id=:'trip_id'::uuid; delete from public.trip_cancellations where trip_id=:'trip_id'::uuid; delete from public.trip_categories where trip_id=:'trip_id'::uuid; delete from public.trips where id=:'trip_id'::uuid; delete from public.delivery_request_events where delivery_request_id=:'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id=:'request_id'::uuid; delete from public.declared_items where delivery_request_id=:'request_id'::uuid; delete from public.delivery_requests where id=:'request_id'::uuid;",
+          "delete from public.policy_acknowledgements where delivery_request_id=:'request_id'::uuid; delete from public.matches where trip_id=:'trip_id'::uuid or delivery_request_id=:'request_id'::uuid; delete from public.trip_events where trip_id=:'trip_id'::uuid; delete from public.trip_cancellations where trip_id=:'trip_id'::uuid; delete from public.trip_categories where trip_id=:'trip_id'::uuid; delete from public.trips where id=:'trip_id'::uuid; delete from public.delivery_request_events where delivery_request_id=:'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id=:'request_id'::uuid; delete from public.declared_items where delivery_request_id=:'request_id'::uuid; delete from public.delivery_requests where id=:'request_id'::uuid;",
         stdio: ['pipe', 'ignore', 'ignore'],
       },
     );
