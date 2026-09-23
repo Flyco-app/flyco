@@ -796,6 +796,61 @@ export type Database = {
           },
         ]
       }
+      policy_acknowledgements: {
+        Row: {
+          acknowledged_at: string
+          booking_id: string | null
+          delivery_request_id: string | null
+          id: string
+          policy_type: string
+          policy_version: string
+          resource_version: number
+          user_id: string
+        }
+        Insert: {
+          acknowledged_at?: string
+          booking_id?: string | null
+          delivery_request_id?: string | null
+          id?: string
+          policy_type: string
+          policy_version: string
+          resource_version: number
+          user_id: string
+        }
+        Update: {
+          acknowledged_at?: string
+          booking_id?: string | null
+          delivery_request_id?: string | null
+          id?: string
+          policy_type?: string
+          policy_version?: string
+          resource_version?: number
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "policy_acknowledgements_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_acknowledgements_delivery_request_id_fkey"
+            columns: ["delivery_request_id"]
+            isOneToOne: false
+            referencedRelation: "delivery_requests"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "policy_acknowledgements_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profile_trust: {
         Row: {
           cancellation_count: number
@@ -1094,6 +1149,7 @@ export type Database = {
           input_booking_id: string
           input_expected_version: number
           input_idempotency_key: string
+          input_policy_acknowledged: boolean
         }
         Returns: {
           booking_id: string
@@ -1207,23 +1263,36 @@ export type Database = {
           category_code: string
           counterparty_display_name: string
           counterparty_id: string
+          declared_contents: string
           delivery_request_id: string
           departure_at: string
           destination_name: string
           expired_at: string
           expires_at: string
+          fragile: boolean
+          handling_notes: string
+          item_description: string
           item_title: string
           match_id: string
           offered_capacity_grams: number
           origin_name: string
           participant_role: string
           proposed_at: string
+          quantity: number
           rejected_at: string
           reserved_capacity_grams: number
           reserved_trip_capacity_grams: number
           status: string
           trip_id: string
           version: number
+        }[]
+      }
+      get_booking_item_photos: {
+        Args: { input_booking_id: string }
+        Returns: {
+          mime_type: string
+          photo_id: string
+          storage_path: string
         }[]
       }
       get_delivery_request_matches: {
@@ -1370,7 +1439,11 @@ export type Database = {
         }[]
       }
       publish_delivery_request: {
-        Args: { input_expected_version: number; input_request_id: string }
+        Args: {
+          input_expected_version: number
+          input_policy_acknowledged: boolean
+          input_request_id: string
+        }
         Returns: number
       }
       publish_trip: {

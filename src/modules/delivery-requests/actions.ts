@@ -146,11 +146,18 @@ export async function publishDeliveryRequest(form: FormData) {
     requestId: form.get('requestId'),
     expectedVersion: form.get('expectedVersion'),
   });
-  if (!parsed.success) commandError(locale);
+  const acknowledgements = [
+    'contentsAccurate',
+    'notProhibited',
+    'packagingAppropriate',
+    'customsUnderstood',
+  ].every((name) => form.get(name) === 'on');
+  if (!parsed.success || !acknowledgements) commandError(locale);
   const { client } = await requireActiveAccount(locale);
   const result = await client.rpc('publish_delivery_request', {
     input_request_id: parsed.data.requestId,
     input_expected_version: parsed.data.expectedVersion,
+    input_policy_acknowledged: true,
   });
   if (result.error) commandError(locale, result.error.code);
   redirect(

@@ -24,6 +24,7 @@ import {
   formatWeight,
 } from '@/modules/delivery-requests/validation';
 import { matchingCopy } from '@/modules/matching/copy';
+import { policyCopy } from '@/modules/policy/config';
 
 export default async function DeliveryRequestDetailPage({
   params,
@@ -38,6 +39,7 @@ export default async function DeliveryRequestDetailPage({
   const request = await loadOwnDeliveryRequest(locale, input.id);
   if (!request) notFound();
   const d = requestCopy[locale];
+  const policy = policyCopy[locale];
   const editable = ['draft', 'published'].includes(request.status);
   const { error } = await searchParams;
   const dimensions =
@@ -197,10 +199,28 @@ export default async function DeliveryRequestDetailPage({
         </Link>
       )}
       {request.status === 'draft' && (
-        <form action={publishDeliveryRequest}>
+        <form
+          action={publishDeliveryRequest}
+          className="space-y-3 rounded-xl border p-4"
+        >
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="requestId" value={request.id} />
           <input type="hidden" name="expectedVersion" value={request.version} />
+          <p className="font-semibold">{policy.publicationRequired}</p>
+          {[
+            ['contentsAccurate', policy.senderAccurate],
+            ['notProhibited', policy.senderAllowed],
+            ['packagingAppropriate', policy.senderPacked],
+            ['customsUnderstood', policy.senderCustoms],
+          ].map(([name, label]) => (
+            <label key={name} className="flex items-start gap-2">
+              <input name={name} type="checkbox" required className="mt-1" />
+              <span>{label}</span>
+            </label>
+          ))}
+          <Link href={`/${locale}/safety`} className="text-sm">
+            {policy.safety}
+          </Link>
           <SubmitButton locale={locale} className="button" type="submit">
             {d.publish}
           </SubmitButton>

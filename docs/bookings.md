@@ -33,3 +33,7 @@ Server-controlled events cover proposal, acceptance, rejection, cancellation, ex
 The event actor foreign key has a partial covering index. Supabase's advisor also flags the composite booking→match and reservation→booking foreign keys, but their first columns are already covered by the unique `bookings.match_id` and primary-key `capacity_reservations.booking_id` indexes used for parent-row maintenance; duplicate composites are intentionally omitted.
 
 Phase 1E matching now evaluates available capacity. Matches remain advisory because acceptance always revalidates and reserves atomically. A future payment phase must add independent payment states; browser redirects can never prove payment.
+
+## Phase 1H safety boundary
+
+Before accepting, the traveler can review the participant-only description, declaration, handling notes and private photos through five-minute signed URLs. Acceptance requires an unchecked acknowledgement and stores `traveler-safety-2026-09-v1` atomically with reservation and transition. Public projections are unchanged. Pre-payment cancellation remains available to either participant in `proposed` or `accepted`; accepted cancellation releases capacity and introduces no fee or refund rule.

@@ -26,9 +26,15 @@ const env = {
   E2E_LOCAL_DB_URL: 'postgresql://postgres:postgres@127.0.0.1:55322/postgres',
   AUTH_RATE_LIMIT_HMAC_SECRET: 'local-e2e-only-secret-with-32-chars-minimum',
 };
+const buildCommand = process.argv.includes('--webpack')
+  ? ['exec', 'next', 'build', '--webpack']
+  : [process.argv.includes('--check') ? 'check' : 'build'];
+const e2eCommand = process.argv.includes('--serial')
+  ? ['exec', 'playwright', 'test', '--workers=1']
+  : ['test:e2e'];
 const commands = process.argv.includes('--skip-build')
-  ? [['test:e2e']]
-  : [[process.argv.includes('--check') ? 'check' : 'build'], ['test:e2e']];
+  ? [e2eCommand]
+  : [buildCommand, e2eCommand];
 for (const args of commands) {
   const result = spawnSync('pnpm', args, { env, stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status ?? 1);

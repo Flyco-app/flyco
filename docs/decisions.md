@@ -124,3 +124,12 @@ Implemented locally on `codex/phase-1a-auth-profiles`: member Auth, profile RLS 
 | A13 | Create profiles on first verified server session under member RLS | Avoids privileged Auth trigger; revisit if immediate pre-verification profile creation becomes required     |
 | A14 | Keep account status in profiles with column grants for this slice | Avoids separate control table/RPC until moderation; migrate with audit/transition plan before staff actions |
 | A15 | Use SSR `token_hash` email confirmation through one app endpoint  | Supports cross-device confirmation; a GET interstitial prevents link prefetch from consuming the token      |
+
+## Phase 1H decisions
+
+| ID  | Decision                                                                                                               | Reason / reconsider when                                                                       |
+| --- | ---------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------- |
+| H01 | Record sender safety acknowledgement in the publish transaction and traveler acknowledgement in the accept transaction | Evidence cannot outlive a failed lifecycle command; revisit version renewal after legal review |
+| H02 | Keep policy copy/config in code and evidence in one small append-only table                                            | A CMS is unnecessary before policy ownership and approval workflow exist                       |
+| H03 | Reveal private item details and signed photos only to booking participants                                             | The traveler needs information before accepting, while public discovery remains narrow         |
+| H04 | Publish Terms and Privacy only as visibly marked pre-launch structures                                                 | Final text has not been supplied or professionally reviewed                                    |

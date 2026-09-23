@@ -57,3 +57,7 @@ Backend schemas, RLS, validation, concurrency, audit and state machines did not 
 ### Verification
 
 Automated coverage exercises the public shell at 360px, 768px and 1440px in French, English and Arabic, checks overflow and RTL, keyboard skip navigation, localized not-found recovery, complete Auth/profile/trip/request flows and the two-party booking lifecycle. The exact implementation-head Vercel preview was inspected in English and Arabic, including the authentication surface. Commit, check and deployment evidence is recorded in `docs/verification.md`.
+
+## Phase 1H disclosures
+
+Safety confirmation stays close to commitment: publication for senders and acceptance for travelers. Checkboxes are never preselected. Concise summaries link to dedicated detail pages. Help, Safety, Terms and Privacy remain available in the shared footer in all locales; draft legal pages display a prominent pre-launch/legal-review notice and use the application RTL shell.

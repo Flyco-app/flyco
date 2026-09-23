@@ -299,6 +299,22 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await expect(page).toHaveURL(/notice=photo-added/);
     await page.getByRole('button', { name: 'Remove' }).click();
     await expect(page).toHaveURL(/notice=photo-removed/);
+    await page
+      .getByLabel('I confirm that the declared contents are accurate.')
+      .check();
+    await page
+      .getByLabel(
+        'I confirm that the item is not prohibited by Flyco’s safety policy.',
+      )
+      .check();
+    await page
+      .getByLabel('I confirm that the item is appropriately packaged.')
+      .check();
+    await page
+      .getByLabel(
+        'I understand that customs, import or export requirements may apply.',
+      )
+      .check();
     await page.getByRole('button', { name: 'Publish' }).click();
     await expect(page).toHaveURL(/notice=published/);
     await page.getByRole('link', { name: 'View public listing' }).click();
@@ -425,7 +441,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
           ],
           {
             input:
-              "delete from public.delivery_request_events where delivery_request_id = :'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id = :'request_id'::uuid; delete from public.item_photos where item_id in (select id from public.declared_items where delivery_request_id = :'request_id'::uuid); delete from public.declared_items where delivery_request_id = :'request_id'::uuid; delete from public.delivery_requests where id = :'request_id'::uuid;",
+              "delete from public.policy_acknowledgements where delivery_request_id = :'request_id'::uuid; delete from public.delivery_request_events where delivery_request_id = :'request_id'::uuid; delete from public.delivery_request_cancellations where delivery_request_id = :'request_id'::uuid; delete from public.item_photos where item_id in (select id from public.declared_items where delivery_request_id = :'request_id'::uuid); delete from public.declared_items where delivery_request_id = :'request_id'::uuid; delete from public.delivery_requests where id = :'request_id'::uuid;",
             stdio: ['pipe', 'ignore', 'ignore'],
           },
         );

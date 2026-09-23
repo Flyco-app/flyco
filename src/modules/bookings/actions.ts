@@ -42,13 +42,18 @@ async function transition(form: FormData, command: 'accept' | 'reject') {
     expectedVersion: form.get('expectedVersion'),
     idempotencyKey: form.get('idempotencyKey'),
   });
-  if (!parsed.success) fail(locale);
+  if (
+    !parsed.success ||
+    (command === 'accept' && form.get('safetyAcknowledged') !== 'on')
+  )
+    fail(locale);
   const { client } = await requireActiveAccount(locale);
   const rpc = command === 'accept' ? 'accept_booking' : 'reject_booking';
   const result = await client.rpc(rpc, {
     input_booking_id: parsed.data.bookingId,
     input_expected_version: parsed.data.expectedVersion,
     input_idempotency_key: parsed.data.idempotencyKey,
+    ...(command === 'accept' ? { input_policy_acknowledged: true } : {}),
   });
   if (result.error) fail(locale, result.error.code);
   redirect(`/${locale}/bookings/${parsed.data.bookingId}?notice=${command}ed`);
