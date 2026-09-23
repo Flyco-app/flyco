@@ -1,5 +1,11 @@
 # Authentication and authorization
 
+## Production deployment gate
+
+| ID  | Decision                                                        | Reason / reconsider when                                                                                                  |
+| --- | --------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| A30 | Disable automatic Vercel Git deployments from the `main` branch | Merging reviewed work must not implicitly publish Production; remove only in a reviewed release change after launch gates |
+
 ## Phase 1E decisions
 
 | ID  | Decision                                                           | Reason / reconsider when                                                                                                      |
