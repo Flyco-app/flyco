@@ -15,7 +15,7 @@ export const matchingCopy = {
     dateFit: 'Marge totale de dates',
     algorithm: 'Version de correspondance',
     advisory:
-      'Cette correspondance est indicative. La capacité n’est pas réservée.',
+      'Cette correspondance utilise la capacité actuellement disponible. Elle reste indicative jusqu’à l’acceptation d’une réservation.',
     previous: 'Précédent',
     next: 'Suivant',
     sender: 'Expéditeur',
@@ -43,7 +43,8 @@ export const matchingCopy = {
     capacityFit: 'Capacity slack',
     dateFit: 'Total date slack',
     algorithm: 'Matching version',
-    advisory: 'This match is advisory. Capacity is not reserved.',
+    advisory:
+      'This match uses currently available capacity. It remains advisory until a booking is accepted.',
     previous: 'Previous',
     next: 'Next',
     sender: 'Sender',
@@ -71,7 +72,8 @@ export const matchingCopy = {
     capacityFit: 'هامش السعة',
     dateFit: 'إجمالي هامش المواعيد',
     algorithm: 'إصدار المطابقة',
-    advisory: 'هذه المطابقة إرشادية ولا تحجز السعة.',
+    advisory:
+      'تستخدم هذه المطابقة السعة المتاحة حالياً، وتبقى إرشادية حتى قبول الحجز.',
     previous: 'السابق',
     next: 'التالي',
     sender: 'المرسل',

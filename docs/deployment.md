@@ -1,5 +1,11 @@
 # Environments and delivery
 
+## Phase 1F promotion
+
+The additive Phase 1F migration may reach staging project `xivkbucvwsioxevlijzj` only after exact-head CI passes. The existing Git-backed Vercel project must supply the Preview for that same commit. Hosted verification uses synthetic participant/listing/booking data and removes it afterward. Production remains disabled and must not receive this migration.
+
+Both Phase 1F migrations are applied to staging. The Git-backed Preview for implementation commit `5e6ee7234d52059276188382ebe765d78f247721` passed the hosted participant flow; the follow-up exact head `087154ea1279b6bde4b2e0b7544b69408bb4afc5` passed quality, database and Vercel checks before the actor index was applied. Synthetic users, sessions, profiles, listings, matches, booking, reservation, receipts and events were deleted afterward. Production project `mcmeroatheonlgxvveyl` remains untouched.
+
 ## Phase 1E staging deployment
 
 The additive `phase_1e_deterministic_matching` migration is applied only to staging project `xivkbucvwsioxevlijzj`, after the exact implementation head passed every required check. The existing Git-backed Vercel project produced the matching Preview; no new Vercel or Supabase project was created. Hosted verification used synthetic members, a trip and a request, then permanently removed every fixture. Production project `mcmeroatheonlgxvveyl` remains disabled and untouched.

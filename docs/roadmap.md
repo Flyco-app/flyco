@@ -50,6 +50,10 @@ Implemented sender requests, a V1 declared shipment item, private item photos an
 
 Implemented versioned advisory projections, exact route/date/category/capacity eligibility, transparent deterministic ranking, owner-only match views, bounded idempotent recomputation and automatic invalidation. Local pgTAP, Data API and application checks cover boundaries, forgery denial, stable ordering, self-match, restrictions and lifecycle invalidation. The staging migration, hosted verification, synthetic-data cleanup, exact-head CI and merge are complete.
 
+## Phase 1F — booking proposals and capacity reservations (complete)
+
+Implements sender-initiated proposals, participant-only projections, explicit pre-payment lifecycle commands and atomic integer-gram reservations. Acceptance locks the booking and trip, revalidates the matching opportunity, prevents oversubscription and recomputes affected matches. Local unit, pgTAP, direct Data API concurrency and browser coverage must pass before staging promotion. Payments, messaging and fulfillment remain excluded.
+
 ## Phase 4 — bookings and messaging
 
 Implement the reviewed booking state machine, atomic capacity reservation, participant-only conversations, confirmation evidence and dispute entry points. Protect every transition with expected-version checks, locks, idempotency and audit events.

@@ -26,8 +26,10 @@ const env = {
   E2E_LOCAL_DB_URL: 'postgresql://postgres:postgres@127.0.0.1:55322/postgres',
   AUTH_RATE_LIMIT_HMAC_SECRET: 'local-e2e-only-secret-with-32-chars-minimum',
 };
-const first = process.argv.includes('--check') ? 'check' : 'build';
-for (const args of [[first], ['test:e2e']]) {
+const commands = process.argv.includes('--skip-build')
+  ? [['test:e2e']]
+  : [[process.argv.includes('--check') ? 'check' : 'build'], ['test:e2e']];
+for (const args of commands) {
   const result = spawnSync('pnpm', args, { env, stdio: 'inherit' });
   if (result.status !== 0) process.exit(result.status ?? 1);
 }

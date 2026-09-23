@@ -1,5 +1,11 @@
 # Foundation verification record
 
+## Phase 1F verification
+
+Phase 1F adds unit validation/copy tests, pgTAP state/grant/RLS tests, a direct Data API two-sender concurrent acceptance race, and a two-account Playwright proposal/accept/cancel/RTL flow. The database checks prove one 3,000 g reservation wins when two proposals compete for a 5,000 g trip, the loser cannot oversubscribe, cancellation releases the hold and matching reactivates. They also cover stale versions, restricted accounts, participant isolation, direct forgery denial, retries and expiration. Exact-head CI, staging migration and hosted evidence are recorded only after completion.
+
+The implementation head `5e6ee7234d52059276188382ebe765d78f247721` passed GitHub quality/database and Vercel checks. Staging then verified sender proposal, traveler acceptance, a 3,000 g reservation reducing 5,000 g to 2,000 g, Arabic RTL, cancellation and restoration to 5,000 g. The persisted booking reached version 3 with five server events and a released reservation before every synthetic account and domain record was removed. A staging advisor review prompted a separate actor-FK index migration; its exact head `087154ea1279b6bde4b2e0b7544b69408bb4afc5` also passed quality, database and Vercel checks before the index was applied to staging.
+
 ## Phase 1E local verification (2026-09-23)
 
 Phase 1E adds deterministic matching version `v1`, owner-only match projections and trigger-driven idempotent recomputation. Frozen install, formatting, zero-warning lint, strict typecheck, 77 unit tests, scoped coverage (98.68% statements / 95.83% branches), a production webpack build and all four authenticated Chromium scenarios pass locally. The standard Turbopack build remains a CI check because this macOS sandbox denies its internal loopback binding.

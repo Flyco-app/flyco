@@ -5,6 +5,7 @@ import { getVerifiedIdentity } from '@/lib/auth/session';
 import { localeSchema } from '@/lib/auth/validation';
 import { tripCopy } from '@/modules/trips/copy';
 import { requestCopy } from '@/modules/delivery-requests/copy';
+import { bookingCopy } from '@/modules/bookings/copy';
 
 export default async function LocaleLayout({
   children,
@@ -37,6 +38,9 @@ export default async function LocaleLayout({
             </Link>
             <Link href={`/${locale}/delivery-requests`}>
               {requestCopy[locale as keyof typeof requestCopy].myRequests}
+            </Link>
+            <Link href={`/${locale}/bookings`}>
+              {bookingCopy[locale as keyof typeof bookingCopy].bookings}
             </Link>
           </span>
         )}

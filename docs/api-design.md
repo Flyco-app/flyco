@@ -1,5 +1,9 @@
 # API and state design
 
+## Phase 1F booking commands
+
+Authenticated server actions call `propose_booking`, `accept_booking`, `reject_booking` and `cancel_booking`. An explicit `expire_booking` command supports bounded persistence work. Commands validate UUIDs and expected versions with Zod, enforce trusted action origin, require live account eligibility where the transition creates obligations, and return safe conflicts. `get_my_bookings(limit, offset)` and `get_booking(id)` are participant-only projections. No generic booking PATCH or table-write API exists. See [bookings](bookings.md).
+
 ## Phase 1E matching reads
 
 `get_trip_matches(trip_id, limit, offset)` requires the active JWT member to own the trip. `get_delivery_request_matches(request_id, limit, offset)` applies the same rule to a request. Inputs are bounded to 1–50 rows and offsets 0–10,000; application routes additionally use 12-row pages. Clients supply no score, reason, version, owner, trust or eligibility data.

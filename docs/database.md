@@ -1,6 +1,10 @@
 # Database model and access design
 
-## Phase 1E implemented schema
+## Phase 1F implemented schema
+
+`bookings` preserves one sender-initiated proposal history per match and copies server-derived participants, source relationships and declared integer-gram weight. Composite foreign keys prevent changing the match/trip/request relationship. `capacity_reservations` has one exact-weight row per accepted booking and an active partial index by trip. `booking_events` is append-only; `booking_command_receipts` deduplicates actor/command UUID keys. All four are API-denied base tables behind narrow participant RPCs. See [bookings](bookings.md).
+
+## Phase 1E matching schema
 
 `matches` is a system-written compatibility projection with one row per trip/request/algorithm version. It records source versions, date and capacity slack, deterministic score, ordered reason codes, active state and recomputation timestamps. `ON DELETE RESTRICT` preserves listing history, while partial indexes support owner-side active ranking and a full request FK index supports reference maintenance.
 
@@ -24,7 +28,7 @@ Foreign keys to profiles, locations and categories use `ON DELETE RESTRICT` so f
 
 Only verified phone numbers are unique, so an unverified number cannot be used to block its rightful owner. Location references use `ON DELETE SET NULL`; account-owned rows cascade from `profiles`. Indexed foreign keys cover residence and identity history lookup. Member profile changes use a security-invoker SQL command so private and public representations update atomically.
 
-Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory is the source of truth through Phase 1E, with pgTAP and direct Data API authorization tests. Future vertical slices remain undeployed until their owning phases add commands, RLS policies and tests.
+Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory is the source of truth through Phase 1F, with pgTAP and direct Data API authorization tests. Future vertical slices remain undeployed until their owning phases add commands, RLS policies and tests.
 
 ## Conventions
 

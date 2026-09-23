@@ -1,5 +1,9 @@
 # Authentication and authorization
 
+## Phase 1F booking boundary
+
+Booking rows, reservations, receipts and audit events are unavailable through direct anonymous/member table access. Participant-only RPCs derive identities from a current match, enforce live account state, lock rows, validate expected versions and accept UUID idempotency keys. Only a sender can propose; only the traveler can accept/reject; either participant can cancel and release accepted capacity. Projection fields are allowlisted and exclude contact details, declared contents, storage paths, internal state and audit data. Concurrent capacity safety is enforced by locking the trip before summing and inserting active reservations.
+
 ## Phase 1E matching boundary
 
 The base match projection is deny-by-default: RLS is enabled, `anon`/`authenticated` receive no table privileges and no member policies exist. Members cannot forge eligibility, score, reasons or algorithm versions. The only member APIs are owner-scoped read RPCs. They require a live active account, verify ownership inside the database, recompute through private fixed-search-path functions and return narrow fields only.

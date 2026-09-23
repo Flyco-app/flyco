@@ -1,5 +1,14 @@
 # Authentication and authorization
 
+## Phase 1F decisions
+
+| ID  | Decision                                     | Reason / reconsider when                                                                                      |
+| --- | -------------------------------------------- | ------------------------------------------------------------------------------------------------------------- |
+| A29 | Sender initiates one proposal per match      | Keeps V1 intent and authorization simple; reconsider only with a designed negotiation model                   |
+| A30 | Reserve capacity only on traveler acceptance | Proposals remain cheap and expiration requires no release; payment authorization may later change hold policy |
+| A31 | Derive available capacity under a trip lock  | Avoids a mutable counter and serializes cross-booking accepts; revisit after measured scaling needs           |
+| A32 | Both participants may cancel before payment  | Releases capacity immediately; a later payment/refund policy will supersede it                                |
+
 ## Production deployment gate
 
 | ID  | Decision                                                        | Reason / reconsider when                                                                                                  |

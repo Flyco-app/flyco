@@ -1,5 +1,9 @@
 # Flyco product specification
 
+## Phase 1F booking scope
+
+V1 bookings are sender-initiated proposals from a current deterministic match. Traveler acceptance reserves declared item weight atomically; proposing does not reserve. Before payment exists, either participant may cancel a proposed or accepted booking and accepted cancellation releases capacity. Proposed, accepted, rejected, cancelled and expired are the only implemented states. Payment, chat, fulfillment, disputes and reviews remain separate scopes.
+
 ## Phase 1E deterministic matching
 
 An active member can view owner-scoped compatible published delivery requests for an owned trip and compatible published trips for an owned delivery request. Compatibility is exact and deterministic across canonical route IDs, inclusive UTC date bounds, normalized category codes and integer-gram offered capacity. Results explain the four rules that passed, carry algorithm version `v1`, show only reviewed public trust indicators and use stable bounded pagination.
