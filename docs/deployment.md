@@ -1,8 +1,8 @@
 # Environments and delivery
 
-## Phase 1E promotion boundary
+## Phase 1E staging deployment
 
-The `phase_1e_deterministic_matching` migration must be applied only to staging project `xivkbucvwsioxevlijzj`, and only after the exact PR head passes every required check. The existing Git-backed Vercel project must produce the preview for that same head; no new Vercel or Supabase project is needed. Hosted verification uses synthetic members, trips and requests and removes them afterward. Production project `mcmeroatheonlgxvveyl` remains disabled and untouched.
+The additive `phase_1e_deterministic_matching` migration is applied only to staging project `xivkbucvwsioxevlijzj`, after the exact implementation head passed every required check. The existing Git-backed Vercel project produced the matching Preview; no new Vercel or Supabase project was created. Hosted verification used synthetic members, a trip and a request, then permanently removed every fixture. Production project `mcmeroatheonlgxvveyl` remains disabled and untouched.
 
 ## Git-backed previews
 
