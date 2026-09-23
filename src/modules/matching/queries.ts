@@ -140,13 +140,14 @@ export async function loadTripMatches(
   locale: Locale,
   tripId: string,
   page: number,
-): Promise<TripMatch[]> {
+): Promise<TripMatch[] | null> {
   const { client } = await requireActiveAccount(locale);
   const result = await client.rpc('get_trip_matches', {
     input_trip_id: tripId,
     input_limit: matchPageSize,
     input_offset: matchOffset(page, matchPageSize),
   });
+  if (result.error?.code === '42501') return null;
   if (result.error) throw new Error('Unable to load trip matches.');
   return (result.data as RawTripMatch[]).map((row) => {
     assertProjection(row.algorithm_version, row.reason_codes);
@@ -186,13 +187,14 @@ export async function loadDeliveryRequestMatches(
   locale: Locale,
   requestId: string,
   page: number,
-): Promise<RequestMatch[]> {
+): Promise<RequestMatch[] | null> {
   const { client } = await requireActiveAccount(locale);
   const result = await client.rpc('get_delivery_request_matches', {
     input_request_id: requestId,
     input_limit: matchPageSize,
     input_offset: matchOffset(page, matchPageSize),
   });
+  if (result.error?.code === '42501') return null;
   if (result.error) throw new Error('Unable to load delivery request matches.');
   return (result.data as RawRequestMatch[]).map((row) => {
     assertProjection(row.algorithm_version, row.reason_codes);

@@ -30,6 +30,7 @@ export default async function DeliveryRequestMatchesPage({
   if (!parsedPage.success) notFound();
   const page = parsedPage.data;
   const matches = await loadDeliveryRequestMatches(locale, input.id, page);
+  if (!matches) notFound();
   const d = matchingCopy[locale];
 
   return (

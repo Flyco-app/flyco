@@ -25,6 +25,7 @@ export default async function TripMatchesPage({
   if (!parsedPage.success) notFound();
   const page = parsedPage.data;
   const matches = await loadTripMatches(locale, input.id, page);
+  if (!matches) notFound();
   const d = matchingCopy[locale];
 
   return (
