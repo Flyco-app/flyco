@@ -4,7 +4,7 @@ import { categoryCopy } from '@/modules/trips/copy';
 export const requestCopy = {
   fr: {
     myRequests: 'Mes envois',
-    createRequest: 'Créer une demande',
+    createRequest: 'Envoyer un objet',
     editRequest: 'Modifier la demande',
     requestDetail: 'Détails de la demande',
     publicRequest: 'Demande publiée',

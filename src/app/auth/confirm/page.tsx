@@ -1,3 +1,5 @@
+import { uiCopy } from '@/lib/ui/copy';
+import { SubmitButton } from '@/components/ui/submit-button';
 import {
   confirmationDestination,
   confirmationSchema,
@@ -19,26 +21,30 @@ export default async function ConfirmPage({
     return (
       <main className="mx-auto max-w-lg p-8">
         <h1 className="text-2xl font-semibold">
-          Invalid or expired confirmation
+          {uiCopy.fr.invalidConfirmation}
         </h1>
-        <Link href="/fr/login">Return to sign in</Link>
+        <Link href="/fr/login">{uiCopy.fr.backLogin}</Link>
       </main>
     );
   const destination = confirmationDestination(
     parsed.data.type,
     parsed.data.next,
   );
+  const locale = destination.locale;
+  const d = uiCopy[locale];
   return (
-    <main className="mx-auto max-w-lg space-y-5 p-8">
-      <h1 className="text-2xl font-semibold">Continue with Flyco</h1>
-      <p>Confirm this single-use authentication request.</p>
+    <main
+      lang={locale}
+      dir={locale === 'ar' ? 'rtl' : 'ltr'}
+      className="auth-panel mx-auto my-12 space-y-5"
+    >
+      <h1 className="text-2xl font-semibold">{d.confirmTitle}</h1>
+      <p>{d.confirmBody}</p>
       <form action={confirmEmailToken}>
         <input type="hidden" name="token_hash" value={parsed.data.token_hash} />
         <input type="hidden" name="type" value={parsed.data.type} />
         <input type="hidden" name="next" value={destination.path} />
-        <button className="button" type="submit">
-          Continue securely
-        </button>
+        <SubmitButton locale={locale}>{d.confirmAction}</SubmitButton>
       </form>
     </main>
   );

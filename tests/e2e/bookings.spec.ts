@@ -121,22 +121,29 @@ test('sender proposes and traveler atomically accepts a booking', async ({
     await expect(travelerPage.getByText('Incoming proposal')).toBeVisible();
     await travelerPage.getByRole('button', { name: 'Accept' }).click();
     await expect(travelerPage).toHaveURL(/notice=accepted/);
-    await expect(travelerPage.getByText('Accepted')).toBeVisible();
+    await expect(
+      travelerPage.locator('.status-badge').filter({ hasText: /^Accepted$/ }),
+    ).toBeVisible();
     await expect(travelerPage.getByText(/2 kg/)).toBeVisible();
 
     await travelerPage.goto(`/ar/bookings/${bookingId}`);
     await expect(travelerPage.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(
-      travelerPage.getByRole('heading', { name: 'الحجز' }),
+      travelerPage.getByRole('heading', { name: 'الحجز', exact: true }),
     ).toBeVisible();
 
     await senderPage.goto(`/en/bookings/${bookingId}`);
-    await expect(senderPage.getByText('Accepted')).toBeVisible();
+    await expect(
+      senderPage.locator('.status-badge').filter({ hasText: /^Accepted$/ }),
+    ).toBeVisible();
+    await senderPage.locator('.destructive-section > summary').click();
     await senderPage.getByLabel('Cancellation reason').fill('E2E release');
     await senderPage.getByRole('button', { name: 'Cancel' }).click();
     await expect(senderPage).toHaveURL(/notice=cancelled/);
     await expect(senderPage.getByText('Cancelled')).toBeVisible();
-    await expect(senderPage.getByText(/5 kg/)).toBeVisible();
+    await expect(
+      senderPage.locator('.capacity-panel').getByText('5 kg').first(),
+    ).toBeVisible();
   } finally {
     sql(
       `

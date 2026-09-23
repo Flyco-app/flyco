@@ -1,3 +1,8 @@
+import { uiCopy } from '@/lib/ui/copy';
+import { RouteDisplay } from '@/components/ui/patterns';
+import { DestructiveSection } from '@/components/ui/patterns';
+import { StatusBadge } from '@/components/ui/patterns';
+import { SubmitButton } from '@/components/ui/submit-button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
@@ -43,37 +48,97 @@ export default async function BookingPage({
   const d = bookingCopy[locale];
   const proposed = booking.status === 'proposed';
   const cancellable = proposed || booking.status === 'accepted';
+  const u = uiCopy[locale];
+  const formatDate = (value: string) =>
+    new Intl.DateTimeFormat(locale, {
+      dateStyle: 'medium',
+      timeStyle: 'short',
+      timeZone: 'UTC',
+    }).format(new Date(value));
+  const events = [
+    { label: u.proposedAt, at: booking.proposed_at },
+    ...(booking.accepted_at
+      ? [{ label: u.acceptedAt, at: booking.accepted_at }]
+      : []),
+    ...[booking.cancelled_at, booking.rejected_at, booking.expired_at]
+      .filter((at): at is string => Boolean(at))
+      .map((at) => ({ label: u.closedAt, at })),
+  ];
   return (
     <section className="space-y-5">
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">{d.booking}</h1>
-        <strong>{bookingStatusLabel(locale, booking.status)}</strong>
+        <StatusBadge status={booking.status}>
+          {bookingStatusLabel(locale, booking.status)}
+        </StatusBadge>
       </div>
+      <p role="status">
+        {proposed
+          ? u.waiting
+          : booking.status === 'accepted'
+            ? u.acceptedHint
+            : u.terminalHint}
+      </p>
       <div className="space-y-2 rounded-xl border p-4">
         <h2 className="font-semibold">{booking.item_title}</h2>
         <p>
-          {booking.origin_name} → {booking.destination_name}
+          <RouteDisplay
+            origin={booking.origin_name}
+            destination={booking.destination_name}
+          />
         </p>
         <p>
-          {d.counterparty}: {booking.counterparty_display_name}
+          {booking.role === 'sender' ? d.outgoing : d.incoming} ·{' '}
+          <Link href={`/${locale}/members/${booking.counterparty_id}`}>
+            {booking.counterparty_display_name}
+          </Link>
         </p>
-        <p>
-          {d.reserved}: {formatWeight(booking.reserved_capacity_grams, locale)}
-        </p>
-        <p>
-          {d.offered}: {formatWeight(booking.offered_capacity_grams, locale)} ·{' '}
-          {d.available}:{' '}
-          {formatWeight(booking.available_capacity_grams, locale)}
-        </p>
-        <p>
-          {d.expires}:{' '}
-          {new Intl.DateTimeFormat(locale, {
-            dateStyle: 'medium',
-            timeStyle: 'short',
-          }).format(new Date(booking.expires_at))}
-        </p>
+        <div className="capacity-panel">
+          <div>
+            <span>{u.weight}</span>
+            <strong>
+              {formatWeight(booking.reserved_capacity_grams, locale)}
+            </strong>
+          </div>
+          <div>
+            <span>{u.offered}</span>
+            <strong>
+              {formatWeight(booking.offered_capacity_grams, locale)}
+            </strong>
+          </div>
+          <div>
+            <span>{u.capacity}</span>
+            <strong>
+              {formatWeight(booking.available_capacity_grams, locale)}
+            </strong>
+          </div>
+        </div>
+        <meter
+          className="capacity-meter"
+          min={0}
+          max={booking.offered_capacity_grams}
+          value={booking.available_capacity_grams}
+          aria-label={u.capacity}
+        />
+        {proposed && (
+          <p>
+            {d.expires}: {formatDate(booking.expires_at)} · UTC
+          </p>
+        )}
         <p className="text-sm">{d.capacityNotice}</p>
       </div>
+      <section className="space-y-4 rounded-xl border p-4">
+        <h2 className="font-semibold">{u.timeline}</h2>
+        <ol className="timeline">
+          {events.map((event) => (
+            <li key={event.label}>
+              <span>{event.label}</span>
+              <time dateTime={event.at}>{formatDate(event.at)}</time>
+            </li>
+          ))}
+        </ol>
+        <p className="text-sm text-muted-foreground">{u.utc}</p>
+      </section>
       {proposed && booking.role === 'traveler' && (
         <div className="flex gap-3">
           <form action={acceptBooking}>
@@ -82,49 +147,60 @@ export default async function BookingPage({
               bookingId={booking.bookingId}
               version={booking.version}
             />
-            <button
-              className="rounded-md bg-black px-4 py-2 text-white"
-              type="submit"
-            >
+            <SubmitButton locale={locale} className="button" type="submit">
               {d.accept}
-            </button>
+            </SubmitButton>
           </form>
-          <form action={rejectBooking}>
+          <details className="destructive-section">
+            <summary>{d.reject}</summary>
+            <p>{u.confirm}</p>
+            <form action={rejectBooking}>
+              <CommandFields
+                locale={locale}
+                bookingId={booking.bookingId}
+                version={booking.version}
+              />
+              <SubmitButton
+                locale={locale}
+                className="button button-secondary"
+                type="submit"
+              >
+                {d.reject}
+              </SubmitButton>
+            </form>
+          </details>
+        </div>
+      )}
+      {cancellable && (
+        <DestructiveSection locale={locale} label={d.cancel}>
+          <form
+            action={cancelBooking}
+            className="space-y-2 rounded-xl border p-4"
+          >
             <CommandFields
               locale={locale}
               bookingId={booking.bookingId}
               version={booking.version}
             />
-            <button className="rounded-md border px-4 py-2" type="submit">
-              {d.reject}
-            </button>
+            <label className="grid gap-1">
+              <span>{d.reason}</span>
+              <input
+                className="field"
+                name="reason"
+                minLength={3}
+                maxLength={240}
+                required
+              />
+            </label>
+            <SubmitButton
+              locale={locale}
+              className="button button-danger"
+              type="submit"
+            >
+              {d.cancel}
+            </SubmitButton>
           </form>
-        </div>
-      )}
-      {cancellable && (
-        <form
-          action={cancelBooking}
-          className="space-y-2 rounded-xl border p-4"
-        >
-          <CommandFields
-            locale={locale}
-            bookingId={booking.bookingId}
-            version={booking.version}
-          />
-          <label className="grid gap-1">
-            <span>{d.reason}</span>
-            <input
-              className="rounded-md border p-2"
-              name="reason"
-              minLength={3}
-              maxLength={240}
-              required
-            />
-          </label>
-          <button className="rounded-md border px-4 py-2" type="submit">
-            {d.cancel}
-          </button>
-        </form>
+        </DestructiveSection>
       )}
       <Link href={`/${locale}/bookings`}>{d.back}</Link>
     </section>

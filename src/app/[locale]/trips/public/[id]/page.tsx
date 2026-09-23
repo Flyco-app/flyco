@@ -1,3 +1,5 @@
+import { RouteDisplay } from '@/components/ui/patterns';
+import { TrustPanel } from '@/components/ui/trust-panel';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
@@ -23,7 +25,10 @@ export default async function PublicTripPage({
       <h1 className="text-2xl font-semibold">{d.publicTrip}</h1>
       <div className="rounded-xl border p-4">
         <strong>
-          {trip.origin.canonical_name} → {trip.destination.canonical_name}
+          <RouteDisplay
+            origin={trip.origin.canonical_name}
+            destination={trip.destination.canonical_name}
+          />
         </strong>
         <p>
           {formatTripDate(trip.departure_at, trip.origin.timezone, locale)}
@@ -42,19 +47,13 @@ export default async function PublicTripPage({
         <Link href={`/${locale}/members/${profile.id}`}>
           {profile.display_name}
         </Link>
-        <h3 className="font-medium">{d.trust}</h3>
-        <p>
-          {d.emailVerified}: {trust.email_verified ? '✓' : '—'}
-        </p>
-        <p>
-          {d.identityVerified}: {trust.identity_verified ? '✓' : '—'}
-        </p>
-        <p>
-          {d.completedJobs}: {trust.completed_traveler_jobs}
-        </p>
-        <p>
-          {d.reviews}: {trust.review_count}
-        </p>
+        <TrustPanel
+          locale={locale}
+          email={trust.email_verified}
+          identity={trust.identity_verified}
+          completed={trust.completed_traveler_jobs}
+          reviews={trust.review_count}
+        />
       </section>
     </section>
   );

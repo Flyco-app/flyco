@@ -1,3 +1,5 @@
+import { RouteDisplay } from '@/components/ui/patterns';
+import { TrustPanel } from '@/components/ui/trust-panel';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
@@ -34,7 +36,10 @@ export default async function PublicDeliveryRequestPage({
       <h1 className="text-2xl font-semibold">{d.publicRequest}</h1>
       <div className="space-y-2 rounded-xl border p-4">
         <strong>
-          {request.origin.canonical_name} → {request.destination.canonical_name}
+          <RouteDisplay
+            origin={request.origin.canonical_name}
+            destination={request.destination.canonical_name}
+          />
         </strong>
         <p>
           {formatRequestDate(
@@ -67,11 +72,13 @@ export default async function PublicDeliveryRequestPage({
         <Link href={`/${locale}/members/${profile.id}`}>
           {profile.display_name}
         </Link>
-        <p>Email: {trust.email_verified ? '✓' : '—'}</p>
-        <p>ID: {trust.identity_verified ? '✓' : '—'}</p>
-        <p>
-          {trust.completed_sender_jobs} · {trust.review_count}
-        </p>
+        <TrustPanel
+          locale={locale}
+          email={trust.email_verified}
+          identity={trust.identity_verified}
+          completed={trust.completed_sender_jobs}
+          reviews={trust.review_count}
+        />
       </section>
     </section>
   );

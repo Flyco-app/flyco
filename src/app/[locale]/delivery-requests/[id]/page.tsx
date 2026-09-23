@@ -1,3 +1,7 @@
+import { uiCopy } from '@/lib/ui/copy';
+import { DestructiveSection } from '@/components/ui/patterns';
+import { StatusBadge } from '@/components/ui/patterns';
+import { SubmitButton } from '@/components/ui/submit-button';
 import Image from 'next/image';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
@@ -44,9 +48,7 @@ export default async function DeliveryRequestDetailPage({
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{d.requestDetail}</h1>
-        <span className="rounded-full border px-2 py-1">
-          {d[request.status]}
-        </span>
+        <StatusBadge status={request.status}>{d[request.status]}</StatusBadge>
       </div>
       {error && (
         <p role="alert" className="rounded-xl border p-3">
@@ -56,6 +58,9 @@ export default async function DeliveryRequestDetailPage({
               ? d.invalidPhoto
               : d.failed}
         </p>
+      )}
+      {request.status === 'draft' && (
+        <p className="section-hint">{uiCopy[locale].reviewHint}</p>
       )}
       <dl className="grid gap-3 rounded-xl border p-4">
         <div>
@@ -149,7 +154,9 @@ export default async function DeliveryRequestDetailPage({
                     name="expectedVersion"
                     value={request.version}
                   />
-                  <button type="submit">{d.removePhoto}</button>
+                  <SubmitButton locale={locale} type="submit">
+                    {d.removePhoto}
+                  </SubmitButton>
                 </form>
               )}
             </li>
@@ -178,9 +185,9 @@ export default async function DeliveryRequestDetailPage({
                 required
               />
             </label>
-            <button className="button" type="submit">
+            <SubmitButton locale={locale} className="button" type="submit">
               {d.uploadPhoto}
-            </button>
+            </SubmitButton>
           </form>
         )}
       </section>
@@ -194,31 +201,43 @@ export default async function DeliveryRequestDetailPage({
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="requestId" value={request.id} />
           <input type="hidden" name="expectedVersion" value={request.version} />
-          <button className="button" type="submit">
+          <SubmitButton locale={locale} className="button" type="submit">
             {d.publish}
-          </button>
+          </SubmitButton>
         </form>
       )}
       {editable && (
-        <form
-          action={cancelDeliveryRequest}
-          className="grid gap-3 rounded-xl border p-4"
-        >
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="requestId" value={request.id} />
-          <input type="hidden" name="expectedVersion" value={request.version} />
-          <label>
-            {d.cancellationReason}
-            <textarea
-              className="field"
-              name="reason"
-              required
-              minLength={3}
-              maxLength={500}
+        <DestructiveSection locale={locale} label={d.cancel} listing>
+          <form
+            action={cancelDeliveryRequest}
+            className="grid gap-3 rounded-xl border p-4"
+          >
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="requestId" value={request.id} />
+            <input
+              type="hidden"
+              name="expectedVersion"
+              value={request.version}
             />
-          </label>
-          <button type="submit">{d.cancel}</button>
-        </form>
+            <label>
+              {d.cancellationReason}
+              <textarea
+                className="field"
+                name="reason"
+                required
+                minLength={3}
+                maxLength={500}
+              />
+            </label>
+            <SubmitButton
+              locale={locale}
+              className="button button-danger"
+              type="submit"
+            >
+              {d.cancel}
+            </SubmitButton>
+          </form>
+        </DestructiveSection>
       )}
       {request.status === 'published' && (
         <div className="flex flex-wrap gap-4">

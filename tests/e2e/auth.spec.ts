@@ -77,7 +77,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     const confirmationPage = await confirmationContext.newPage();
     await confirmationPage.goto(signupLink);
     await confirmationPage
-      .getByRole('button', { name: 'Continue securely' })
+      .getByRole('button', { name: 'Continuer en toute sécurité' })
       .click();
     await expect(confirmationPage).toHaveURL(/\/fr\/profile$/);
     await confirmationContext.close();
@@ -103,39 +103,43 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     const replayContext = await page.context().browser()!.newContext();
     const replayPage = await replayContext.newPage();
     await replayPage.goto(signupLink);
-    await replayPage.getByRole('button', { name: 'Continue securely' }).click();
+    await replayPage
+      .getByRole('button', { name: 'Continuer en toute sécurité' })
+      .click();
     await expect(replayPage).toHaveURL(
       /\/fr\/login\?error=confirmation-failed$/,
     );
     await replayContext.close();
     await expect(page.getByText('Test Member')).toBeVisible();
-    const accountNav = page.getByRole('navigation');
+    const accountNav = page.getByRole('navigation', {
+      name: 'Main navigation',
+    });
     await expect(
-      accountNav.getByRole('link', { name: 'Flyco' }),
-    ).toHaveAttribute('href', '/en/profile');
+      page.getByRole('link', { name: 'Flyco', exact: true }),
+    ).toHaveAttribute('href', '/en');
     await expect(
       accountNav.getByRole('link', { name: 'Profile' }),
     ).toBeVisible();
     await expect(
-      accountNav.getByRole('link', { name: 'Account settings' }),
+      page.getByRole('link', { name: 'Account settings' }),
     ).toBeVisible();
     await expect(
       accountNav.getByRole('link', { name: 'My trips' }),
     ).toBeVisible();
     await expect(
-      accountNav.getByRole('link', { name: 'My delivery requests' }),
+      accountNav.getByRole('link', { name: 'My requests' }),
     ).toBeVisible();
     await accountNav.getByRole('link', { name: 'My trips' }).click();
     await expect(page).toHaveURL(/\/en\/trips$/);
     await accountNav.getByRole('link', { name: 'Profile' }).click();
     await expect(page).toHaveURL(/\/en\/profile$/);
     await expect(page.getByText('Test Member')).toBeVisible();
-    await accountNav.getByRole('link', { name: 'Account settings' }).click();
+    await page.getByRole('link', { name: 'Account settings' }).click();
     await expect(page).toHaveURL(/\/en\/settings$/);
     await page.getByLabel('Display name').fill('Updated Member');
     await page.getByLabel('First name').fill('Updated');
     await page.getByLabel('Last name').fill('Member');
-    await page.getByLabel('Phone (E.164)').fill('+33612345678');
+    await page.getByLabel('Phone (with country code)').fill('+33612345678');
     await page.getByLabel('Short bio').fill('Public profile biography');
     await page
       .getByLabel('City of residence')
@@ -143,7 +147,9 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await page.getByRole('button', { name: 'Save' }).click();
     await expect(page).toHaveURL(/\/en\/settings\?notice=saved$/);
     await expect(page.getByLabel('Display name')).toHaveValue('Updated Member');
-    await expect(page.getByLabel('Phone (E.164)')).toHaveValue('+33612345678');
+    await expect(page.getByLabel('Phone (with country code)')).toHaveValue(
+      '+33612345678',
+    );
     const png = Buffer.from(
       'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mNk+A8AAQUBAScY42YAAAAASUVORK5CYII=',
       'base64',
@@ -172,18 +178,16 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await page.goto('/ar/settings');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(
-      page.getByRole('navigation').getByRole('link', { name: 'الملف الشخصي' }),
+      page.getByRole('navigation').getByRole('link', { name: 'حسابي' }),
     ).toBeVisible();
     await expect(
-      page
-        .getByRole('navigation')
-        .getByRole('link', { name: 'إعدادات الحساب' }),
+      page.getByRole('heading', { name: 'إعدادات الحساب' }),
     ).toBeVisible();
     await expect(
       page.getByRole('navigation').getByRole('link', { name: 'رحلاتي' }),
     ).toBeVisible();
     await expect(
-      page.getByRole('navigation').getByRole('link', { name: 'طلبات الإرسال' }),
+      page.getByRole('navigation').getByRole('link', { name: 'إرسالياتي' }),
     ).toBeVisible();
     await expect(page.getByLabel('الاسم الأول')).toHaveValue('Updated');
     await page.goto('/en/settings');
@@ -192,11 +196,9 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       option.value = '90000000-0000-4000-8000-000000000009';
       option.textContent = 'Tampered';
       select.append(option);
+      (select as HTMLSelectElement).value = option.value;
+      (select as HTMLSelectElement).form?.requestSubmit();
     });
-    await page
-      .getByLabel('City of residence')
-      .selectOption('90000000-0000-4000-8000-000000000009');
-    await page.getByRole('button', { name: 'Save' }).click();
     await expect(page).toHaveURL(/\/en\/settings\?error=invalid$/);
     const departureInstant = new Date(Date.now() + 30 * 86_400_000);
     const arrivalInstant = new Date(departureInstant.getTime() + 4 * 3_600_000);
@@ -227,7 +229,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       page.getByRole('heading', { name: 'Published trip' }),
     ).toBeVisible();
     await expect(
-      page.getByText('Paris, France → Casablanca, Morocco'),
+      page.locator('.route-display').filter({ hasText: 'Paris, France' }),
     ).toBeVisible();
     await expect(page.getByText(email)).toHaveCount(0);
     await expect(page.getByText('+33612345678')).toHaveCount(0);
@@ -249,6 +251,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByRole('heading', { name: 'رحلاتي' })).toBeVisible();
     await page.goto(`/en/trips/${tripId}`);
+    await page.locator('.destructive-section > summary').click();
     await page.getByLabel('Cancellation reason').fill('E2E cleanup');
     await page.getByRole('button', { name: 'Cancel trip' }).click();
     await expect(page).toHaveURL(/notice=cancelled/);
@@ -328,6 +331,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
       page.getByRole('heading', { name: 'طلبات الإرسال' }),
     ).toBeVisible();
     await page.goto(`/en/delivery-requests/${deliveryRequestId}`);
+    await page.locator('.destructive-section > summary').click();
     await page.getByLabel('Cancellation reason').fill('E2E cleanup');
     await page.getByRole('button', { name: 'Cancel request' }).click();
     await expect(page).toHaveURL(/notice=cancelled/);
@@ -346,7 +350,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     const recoveryPage = await recoveryContext.newPage();
     await recoveryPage.goto(recoveryLink);
     await recoveryPage
-      .getByRole('button', { name: 'Continue securely' })
+      .getByRole('button', { name: 'Continuer en toute sécurité' })
       .click();
     await expect(recoveryPage).toHaveURL(/\/fr\/new-password$/);
     page = recoveryPage;
@@ -360,7 +364,7 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await page.goto('/en/settings');
     changedEmail = `changed-${randomUUID()}@example.invalid`;
     await page.getByLabel('Email address').fill(changedEmail);
-    await page.getByRole('button', { name: 'Email address' }).click();
+    await page.getByRole('button', { name: 'Change email address' }).click();
     await expect(page).toHaveURL(/\/en\/check-email$/);
     const newAddressLink = await findMail(changedEmail, 'email_change');
     const oldAddressLink = await findMail(email, 'email_change');
@@ -369,13 +373,15 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     const firstChangePage = await firstChangeContext.newPage();
     await firstChangePage.goto(oldAddressLink);
     await firstChangePage
-      .getByRole('button', { name: 'Continue securely' })
+      .getByRole('button', { name: 'Continuer en toute sécurité' })
       .click();
     await firstChangeContext.close();
     const changeContext = await page.context().browser()!.newContext();
     const changePage = await changeContext.newPage();
     await changePage.goto(newAddressLink);
-    await changePage.getByRole('button', { name: 'Continue securely' }).click();
+    await changePage
+      .getByRole('button', { name: 'Continuer en toute sécurité' })
+      .click();
     await expect(changePage).toHaveURL(/\/fr\/settings$/);
     await changeContext.close();
     expect(cspViolations).toEqual([]);
