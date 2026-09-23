@@ -33,7 +33,8 @@
     "test:e2e:auth:local": "node scripts/run-local-auth-e2e.mjs",
     "db:profile:check": "node scripts/check-profile-api.mjs",
     "db:trips:check": "node scripts/check-trips-api.mjs",
-    "db:delivery-requests:check": "node scripts/check-delivery-requests-api.mjs"
+    "db:delivery-requests:check": "node scripts/check-delivery-requests-api.mjs",
+    "db:matching:check": "node scripts/check-matching-api.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.0",

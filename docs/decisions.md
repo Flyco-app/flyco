@@ -1,5 +1,15 @@
 # Authentication and authorization
 
+## Phase 1E decisions
+
+| ID  | Decision                                                           | Reason / reconsider when                                                                                                      |
+| --- | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------- |
+| A25 | Persist a versioned match projection and revalidate on owner reads | Enables notifications/recompute while keeping discovery advisory; move refresh work async when 500 candidates is insufficient |
+| A26 | Rank date slack first and unused capacity second                   | Objective, deterministic and explainable; change only under a new algorithm version                                           |
+| A27 | Keep public trust indicators out of V1 eligibility and score       | Avoids opaque or discriminatory ranking while still giving members useful context                                             |
+| A28 | Deny self-match and exact-match canonical route/category only      | Safe V1 semantics; radius, stops or substitutions require explicit product/policy work                                        |
+| A29 | Keep the base table inaccessible and expose owner-only projections | Prevents score/reason forgery and private listing/profile leakage                                                             |
+
 ## Phase 1D decisions
 
 | ID  | Decision                                                                   | Reason / reconsider when                                                                                                     |

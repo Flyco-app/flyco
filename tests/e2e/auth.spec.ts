@@ -235,6 +235,16 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await expect(
       page.getByRole('heading', { name: 'Détails du voyage' }),
     ).toBeVisible();
+    await page.goto(`/en/trips/${tripId}/matches`);
+    await expect(
+      page.getByRole('heading', { name: 'Matches for this trip' }),
+    ).toBeVisible();
+    await expect(page.getByText('No compatible matches yet.')).toBeVisible();
+    await page.goto(`/ar/trips/${tripId}/matches`);
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(
+      page.getByRole('heading', { name: 'طلبات متوافقة مع هذه الرحلة' }),
+    ).toBeVisible();
     await page.goto('/ar/trips');
     await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
     await expect(page.getByRole('heading', { name: 'رحلاتي' })).toBeVisible();
@@ -296,6 +306,18 @@ test('signup, verification, profile edit, logout, login and recovery', async ({
     await expect(page.getByText('Two signed paper contracts')).toHaveCount(0);
     await expect(page.getByText(email)).toHaveCount(0);
     await expect(page.getByText('+33612345678')).toHaveCount(0);
+    await page.goto(`/en/delivery-requests/${deliveryRequestId}/matches`);
+    await expect(
+      page.getByRole('heading', {
+        name: 'Matches for this delivery request',
+      }),
+    ).toBeVisible();
+    await expect(page.getByText('No compatible matches yet.')).toBeVisible();
+    await page.goto(`/ar/delivery-requests/${deliveryRequestId}/matches`);
+    await expect(page.locator('html')).toHaveAttribute('dir', 'rtl');
+    await expect(
+      page.getByRole('heading', { name: 'رحلات متوافقة مع طلب الإرسال' }),
+    ).toBeVisible();
     await page.goto('/fr/delivery-requests');
     await expect(
       page.getByRole('heading', { name: 'Mes envois' }),

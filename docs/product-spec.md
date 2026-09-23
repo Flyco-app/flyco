@@ -1,5 +1,11 @@
 # Flyco product specification
 
+## Phase 1E deterministic matching
+
+An active member can view owner-scoped compatible published delivery requests for an owned trip and compatible published trips for an owned delivery request. Compatibility is exact and deterministic across canonical route IDs, inclusive UTC date bounds, normalized category codes and integer-gram offered capacity. Results explain the four rules that passed, carry algorithm version `v1`, show only reviewed public trust indicators and use stable bounded pagination.
+
+Matches are advisory. They do not reserve capacity, create a booking, open messaging or promise that a listing remains available. Trust does not affect V1 rank, self-match is denied, and no AI, fuzzy route/category logic or legal eligibility inference is used.
+
 ## Phase 1D sender delivery requests
 
 An active verified member can create one declared shipment item with a canonical route, flexible date window, exact weight/dimensions, declaration and private photos; edit the aggregate; publish a narrow opportunity; and cancel with a reason. The same category codes used by traveler trips will support deterministic compatibility later. Photos, declared contents, detailed description and handling notes remain owner-only.
@@ -16,7 +22,7 @@ Phase 1C does not include delivery requests, matching, reservations, bookings, m
 
 Members have self-only legal/contact settings (first name, last name, preferred language and E.164 phone), and a separate public marketplace card (display name, short bio, avatar and selected canonical residence). Public pages never expose email, phone, legal names, account controls or verification attempt details. Objective trust indicators are public and system controlled. Locations are selected from Flyco's normalized catalog.
 
-Status: Phase 1B profile, trust, avatar, identity-attempt and normalized-location behavior is implemented. Trips and sender requests are implemented as independent listing aggregates; matching and transactions remain planned.
+Status: Phase 1B profile, trust, avatar, identity-attempt and normalized-location behavior is implemented. Trips, sender requests and advisory matching are implemented; transactional booking/payment behavior remains planned.
 
 ## Purpose and scope
 

@@ -2,6 +2,7 @@ import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
 import { cancelTrip, publishTrip } from '@/modules/trips/actions';
+import { matchingCopy } from '@/modules/matching/copy';
 import { categoryLabel, tripCopy } from '@/modules/trips/copy';
 import { formatTripDate } from '@/modules/trips/presentation';
 import { loadOwnTrip } from '@/modules/trips/queries';
@@ -85,7 +86,14 @@ export default async function TripDetailPage({
         </form>
       )}
       {trip.status === 'published' && (
-        <Link href={`/${locale}/trips/public/${trip.id}`}>{d.viewPublic}</Link>
+        <div className="flex flex-wrap gap-4">
+          <Link href={`/${locale}/trips/${trip.id}/matches`}>
+            {matchingCopy[locale].tripMatches}
+          </Link>
+          <Link href={`/${locale}/trips/public/${trip.id}`}>
+            {d.viewPublic}
+          </Link>
+        </div>
       )}
       <Link href={`/${locale}/trips`}>{d.back}</Link>
     </section>

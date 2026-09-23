@@ -1,5 +1,11 @@
 # API and state design
 
+## Phase 1E matching reads
+
+`get_trip_matches(trip_id, limit, offset)` requires the active JWT member to own the trip. `get_delivery_request_matches(request_id, limit, offset)` applies the same rule to a request. Inputs are bounded to 1–50 rows and offsets 0–10,000; application routes additionally use 12-row pages. Clients supply no score, reason, version, owner, trust or eligibility data.
+
+Both RPCs are read-shaped member APIs backed by a system-written projection. They recompute the identified aggregate idempotently, apply current lifecycle/time predicates again, and return only approved listing/profile/trust fields. Sorting is score descending, relevant candidate date ascending, UUID ascending. The application uses Server Components for these authenticated reads; there is no client mutation or public route handler.
+
 ## Phase 1D delivery request commands
 
 The application exposes Server Actions backed by member-JWT RPCs: `create_delivery_request_draft`, `update_delivery_request`, `publish_delivery_request`, `cancel_delivery_request`, `begin_item_photo_upload`, `finalize_item_photo_upload` and `remove_item_photo`. Every mutation validates authenticated active-account state, derives the actor, locks the request and checks its expected version. Request creation writes the item and audit event in one transaction. Public reads use only `get_public_delivery_request`; owner pages query owner-RLS base rows.

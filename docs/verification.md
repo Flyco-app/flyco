@@ -1,5 +1,13 @@
 # Foundation verification record
 
+## Phase 1E local verification (2026-09-23)
+
+Phase 1E adds deterministic matching version `v1`, owner-only match projections and trigger-driven idempotent recomputation. Frozen install, formatting, zero-warning lint, strict typecheck, 77 unit tests, scoped coverage (98.68% statements / 95.83% branches), a production webpack build and all four authenticated Chromium scenarios pass locally. The standard Turbopack build remains a CI check because this macOS sandbox denies its internal loopback binding.
+
+The local database rebuild, database lint, 200 pgTAP assertions and direct matching Data API check pass. The matching suite covers inclusive date boundaries, route/category/capacity eligibility, restricted accounts, self-match exclusion, lifecycle invalidation, deterministic score/order, duplicate prevention, owner isolation and denial of direct match-table/recompute forgery. Existing Auth lifecycle, profile/Storage, trip and delivery-request authorization runners also pass. The repository scanner found no known credential patterns or tracked environment files in the working tree or reachable Git history, and Gitleaks 8.30.1 found no issue in reachable history.
+
+Staging migration and hosted verification remain pending until the exact PR head passes CI. Production has not been accessed.
+
 ## Phase 1D verification (2026-09-22)
 
 Phase 1D is implemented on `codex/phase-1d-delivery-requests`. Formatting, zero-warning lint, strict typecheck, 74 Vitest tests and a clean Next.js production build pass. Four Chromium tests pass, including the full authenticated lifecycle and delivery request draft, private photo add/remove, publish, narrow public view, French navigation, Arabic RTL and cancellation.

@@ -1,5 +1,9 @@
 # Environments and delivery
 
+## Phase 1E promotion boundary
+
+The `phase_1e_deterministic_matching` migration must be applied only to staging project `xivkbucvwsioxevlijzj`, and only after the exact PR head passes every required check. The existing Git-backed Vercel project must produce the preview for that same head; no new Vercel or Supabase project is needed. Hosted verification uses synthetic members, trips and requests and removes them afterward. Production project `mcmeroatheonlgxvveyl` remains disabled and untouched.
+
 ## Git-backed previews
 
 The existing Vercel `flyco` project is connected to `Flyco-app/flyco`. Pull requests create a preview and report commit status; no second project or deploy hook is needed. `vercel.json` must not disable Git deployments. A feature preview is accepted only after its deployment identifies the exact PR head and uses staging Supabase configuration. Repository migrations remain the schema source of truth. Supabase/Vercel integration presence does not authorize automatic production migrations, database branching or promotion.
