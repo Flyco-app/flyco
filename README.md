@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1E deterministic matching.** Supabase Auth, account security, profiles, trust/location foundations, traveler trips, sender requests, declared items, private item photos and advisory matching are implemented. Bookings, capacity reservations, messaging, payments, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
+**Current scope: Phase 1F booking proposals and capacity reservations.** Supabase Auth, account security, profiles, trust/location foundations, traveler trips, sender requests, declared items, private item photos, advisory matching and pre-payment reservations are implemented. Messaging, payments, fulfillment, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
 
 ## Architecture
 
@@ -38,7 +38,7 @@ Copy the local API URL/publishable key from local status into SUPABASE_URL / SUP
 
 The existing remote project is **staging**. The separate **flyco-production** project is reserved for reviewed releases. Local validation rejects remote databases; hosted environment checks reject staging/production cross-use. No remote connection is needed for development.
 
-`docs/schema.sql` is a default-deny **design reference, not a migration**. Do not apply it to a shared database. Phase 1A and Phase 1B have narrow, tested migrations; the rest of the reference remains undeployed. Future migrations arrive incrementally with commands, RLS policies and tests. See [database design](docs/database.md).
+`docs/schema.sql` is a default-deny **design reference, not a migration**. Do not apply it to a shared database. Phases 1A–1F have narrow, tested migrations; the rest of the reference remains undeployed. Future migrations arrive incrementally with commands, RLS policies and tests. See [database design](docs/database.md).
 
 ## Environment configuration
 
@@ -56,6 +56,7 @@ pnpm exec playwright install chromium
 pnpm test:e2e
 pnpm db:profile:check # local Auth profile required
 pnpm db:matching:check # local Auth profile required
+pnpm db:bookings:check # local Auth profile required; includes the concurrent capacity race
 pnpm test:e2e:auth:local # local Auth profile + Mailpit required
 ```
 
@@ -69,7 +70,7 @@ The temporarily public GitHub repository is [Flyco-app/flyco](https://github.com
 
 ## Engineering documentation
 
-[Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Trips](docs/trips.md) · [Delivery requests](docs/delivery-requests.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
+[Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Trips](docs/trips.md) · [Delivery requests](docs/delivery-requests.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Bookings](docs/bookings.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
 
 Read [AGENTS.md](AGENTS.md) before future Codex work. Business launch blockers include supported Morocco-recipient payout arrangements, carriage/customs eligibility, liability, pricing/refund policy, identity/privacy rules and commercial hosting/recovery plans.
 
