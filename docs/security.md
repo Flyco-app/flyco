@@ -1,5 +1,11 @@
 # Authentication and authorization
 
+## Phase 1E matching boundary
+
+The base match projection is deny-by-default: RLS is enabled, `anon`/`authenticated` receive no table privileges and no member policies exist. Members cannot forge eligibility, score, reasons or algorithm versions. The only member APIs are owner-scoped read RPCs. They require a live active account, verify ownership inside the database, recompute through private fixed-search-path functions and return narrow fields only.
+
+Match results exclude email, phone, legal name, residence, bio, declared contents, detailed descriptions, handling notes, photos/storage paths, account state, moderation and audit data. Anonymous users cannot execute match RPCs. Live lifecycle/time/account predicates and trigger invalidation prevent cancelled, expired or restricted stale rows from reappearing. Self-match is filtered in the central SQL candidate function. Trust is display-only and cannot change eligibility/ranking.
+
 ## Phase 1D request and item boundary
 
 Delivery request base tables are owner-only under RLS and explicit SELECT column grants. Application roles have no direct write privilege. Security-definer commands use an empty search path, derive `auth.uid()`, require a live active profile, enforce ownership/state/version under a row lock and append controlled audit rows. The anonymous/authenticated discovery surface is a fixed return table that omits private declaration fields, photos, paths, versions, cancellations, audit and account controls.

@@ -1,5 +1,11 @@
 # Database model and access design
 
+## Phase 1E implemented schema
+
+`matches` is a system-written compatibility projection with one row per trip/request/algorithm version. It records source versions, date and capacity slack, deterministic score, ordered reason codes, active state and recomputation timestamps. `ON DELETE RESTRICT` preserves listing history, while partial indexes support owner-side active ranking and a full request FK index supports reference maintenance.
+
+The base table has RLS enabled and no member grants. Owner-only RPCs recompute and return narrow safe projections. Private trigger/functions update at most 500 candidates for the affected aggregate after lifecycle, category, weight or account-status changes. See [matching](matching.md).
+
 ## Phase 1D implemented schema
 
 `delivery_requests` owns the canonical route, flexible UTC window, lifecycle and optimistic version. `declared_items` is a one-to-one V1 declaration containing one stable category, exact integer measurements, content fields and handling metadata. `item_photos` authorizes pending/ready/deleted private Storage objects. Cancellations and append-only events are separate tables.
@@ -18,7 +24,7 @@ Foreign keys to profiles, locations and categories use `ON DELETE RESTRICT` so f
 
 Only verified phone numbers are unique, so an unverified number cannot be used to block its rightful owner. Location references use `ON DELETE SET NULL`; account-owned rows cascade from `profiles`. Indexed foreign keys cover residence and identity history lookup. Member profile changes use a security-invoker SQL command so private and public representations update atomically.
 
-Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory contains the narrow Phase 1A/Auth-hardening and Phase 1B migrations with matching authorization tests. Future vertical slices remain undeployed until their owning phases add commands, RLS policies and tests.
+Status: [schema.sql](schema.sql) remains a reviewed future design reference. The migration directory is the source of truth through Phase 1E, with pgTAP and direct Data API authorization tests. Future vertical slices remain undeployed until their owning phases add commands, RLS policies and tests.
 
 ## Conventions
 
@@ -100,7 +106,7 @@ No anon access by default. “Owner” always means `(select auth.uid())` derive
 | trip_categories                                        | Parent trip visibility                                                                             | Traveler only before commitments; FK ownership check                                                        |
 | delivery_requests                                      | Owner; matched traveler safe projection; booked counterpart                                        | Sender only through commands; lock immutable terms after acceptance                                         |
 | items, item_photos                                     | Sender; current matched/booked traveler approved projection; assigned case staff                   | Sender on editable request; clean scan required for counterpart; photo metadata server-derived              |
-| matches                                                | Owning sender and traveler only                                                                    | Matcher/recompute command; no client writes                                                                 |
+| matches                                                | No base-table member reads; owner-only narrow RPCs for each listing side                           | Private trigger/recompute functions only; no client writes                                                  |
 | bookings, booking_events                               | Exactly sender/traveler; assigned case staff projection                                            | Named commands; no direct status/participant writes; events append only                                     |
 | capacity_reservations, booking_contacts                | Availability projection or booked participant contact DTO; no public raw reads                     | Booking command only; contact disclosure begins at approved booking stage                                   |
 | conversations, conversation_members                    | Exact matched/booked participants; assigned report reviewer only                                   | Server derives two participants; no user-added membership; no recursive membership RLS                      |

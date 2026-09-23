@@ -2,7 +2,7 @@
 
 A peer-to-peer delivery marketplace connecting senders with travelers already taking a route, starting with France ↔ Morocco. One account can do both.
 
-**Current scope: Phase 1D sender delivery requests.** Supabase Auth, account security, profiles, trust/location foundations, traveler trips, sender requests, declared items and private item photos are implemented. Matching, bookings, messaging, payments, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
+**Current scope: Phase 1E deterministic matching.** Supabase Auth, account security, profiles, trust/location foundations, traveler trips, sender requests, declared items, private item photos and advisory matching are implemented. Bookings, capacity reservations, messaging, payments, reviews, disputes and admin workflows are not implemented. No production data or live payment is used.
 
 ## Architecture
 
@@ -55,6 +55,7 @@ pnpm secrets:check
 pnpm exec playwright install chromium
 pnpm test:e2e
 pnpm db:profile:check # local Auth profile required
+pnpm db:matching:check # local Auth profile required
 pnpm test:e2e:auth:local # local Auth profile + Mailpit required
 ```
 

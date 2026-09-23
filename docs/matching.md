@@ -1,25 +1,57 @@
 # Deterministic matching V1
 
-Status: specification, no matching feature implemented. Algorithm version `route-v1`.
+Phase 1E implements advisory matching between published traveler trips and published delivery requests. It answers which listings are compatible without creating a booking, reserving capacity, starting a conversation or guaranteeing future availability. Algorithm version `v1` is implemented in migration `20260922232706_phase_1e_deterministic_matching`.
 
-## Eligibility filters
+## Eligibility
 
-1. Trip published, request open, departure in future; both accounts active and meet the operation's identity requirements. Exclude self-match and user blocks.
-2. Exact canonical origin city ID and destination city ID in the same direction. Reference cities include country ISO code and IANA timezone. No free-text city comparison, country-only fallback, geocoding radius or multi-leg routing.
-3. Trip departure lies in request pickup window and arrival lies in request delivery window (inclusive absolute timestamps). Store windows as timestamptz; convert user local dates to bounds using city's timezone, not browser timezone. Arrival >= departure.
-4. Sum of request item weights plus all active reservations must fit the trip's total capacity. Released/expired reservations do not count. All item categories must be explicitly permitted by trip and current corridor policy. Missing eligibility data fails closed.
-5. Each dimension limit, declared-value cap and route/carrier restriction must pass when configured. Unknown required dimensions disqualify; do not assume zero. V1 cannot make legal eligibility decisions itself.
+A pair is eligible only when all rules pass at the same database snapshot:
+
+1. Both rows have `published` status. Trip departure and request latest delivery are still in the future.
+2. Both owners have live `profiles.account_status = 'active'`, and the owners differ.
+3. Origin location IDs are equal and destination location IDs are equal in the same direction.
+4. `trip.departure_at >= request.earliest_departure_at` and `trip.arrival_at <= request.latest_delivery_at`. Boundaries are inclusive. Values are canonical `timestamptz` instants produced by the existing timezone/DST-safe listing boundaries.
+5. The declared item's active normalized category exists in `trip_categories`.
+6. `trip.capacity_grams >= declared_item.weight_grams`.
+
+Missing or stale eligibility data fails closed. V1 has no radius search, nearby-city substitution, intermediate stop, fuzzy category, prohibited-item inference, trust-based eligibility or self-match. Rejection diagnostics remain internal and are not returned to members.
+
+## Persistence and recomputation
+
+`matches` is a persisted projection keyed uniquely by `(trip_id, delivery_request_id, algorithm_version)`. It stores source aggregate versions, the two fit components, the deterministic score, fixed reason codes, active state and creation/recomputation timestamps. Foreign keys use `ON DELETE RESTRICT`; future bookings must copy or reference reviewed match semantics without making discovery rows transactional authority.
+
+Triggers recompute the affected side after trip/request lifecycle or compatible-field changes, trip-category changes, declared item category/weight/deletion changes and account-status changes. Owner read RPCs also recompute their requested aggregate before returning results, so correctness does not depend on a background worker. Each run first deactivates the aggregate's V1 rows, then upserts at most the best 500 eligible candidates. The unique constraint makes reruns idempotent and preserves one row when compatibility returns. Cancellation, restriction and incompatible edits deactivate stale rows immediately. Clock-based expiration is filtered from every projection even before persistence catches up; the next owner read also deactivates the expired projection row.
+
+The 500-candidate cap bounds synchronous write work. A later worker can refresh projections asynchronously when marketplace volume outgrows this limit, but reads must continue applying live eligibility predicates. No external search service is justified for exact V1 city routes.
 
 ## Ranking
 
-Filter first, then lexicographic sort: absolute minutes from preferred departure (or pickup-window midpoint if no preference); unused grams after booking ascending; departure instant ascending; trip UUID ascending. No opaque weighted reputation score. Reputation may be a displayed filter only after bias/abuse review. Same immutable input snapshot yields identical order. Store algorithm version, input versions, evaluation time and reason codes (`route_exact`, `dates_fit`, `categories_allowed`, `capacity_fits`) for each suggested match. Expire cached matches after a short configurable TTL and invalidate when listings change.
+V1 does not use trust in ranking. Public objective trust indicators are shown alongside results only.
 
-Queries first narrow on published origin/destination/departure using a composite partial index; use EXISTS/NOT EXISTS for all-category membership and aggregate item weights. Bound candidate scans, use keyset pagination with deterministic tie-break. Never promise reserved capacity at discovery time.
+For every eligible pair:
 
-## Acceptance and concurrency
+- `date_slack_minutes = floor(((trip departure − earliest departure) + (latest delivery − trip arrival)) / 1 minute)`
+- `capacity_slack_grams = trip offered capacity − declared item weight`
+- `date_component = 100000 − min(date_slack_minutes, 100000)`
+- `capacity_component = 10000 − min(floor(capacity_slack_grams / 100), 10000)`
+- `score = date_component × 10001 + capacity_component`
 
-Matching is advisory. Acceptance re-reads listings and account eligibility under transaction locks, checks versions, copies agreed terms and creates a capacity reservation atomically. Competing acceptances cannot both consume the last grams. Reserving one request on two trips is stopped by the active-booking unique index. Expired holds are released under the same lock order, once. A late successful payment after expiry must trigger compensation/review, not resurrect a booking unconditionally.
+The multiplier makes date fit lexicographically dominant over the full capacity component. Smaller date slack ranks first; when date fit ties, smaller unused capacity ranks first. Member projections then sort by descending score, the candidate listing's relevant date ascending, and candidate UUID ascending. Pagination uses a fixed page size of 12, a maximum of 50 rows per RPC call and bounded offset. The stable UUID tie-break prevents permutation-dependent ordering.
 
-## Required tests
+## Reasons and privacy
 
-Reversed route, same sender/traveler, boundary timestamps, French daylight-saving transitions and Morocco timezone changes (use IANA data), zero/oversized weight, rejected categories, missing dimensions, suspended account, ties, stale version, expired holds and two competing acceptances. Property tests: every returned candidate satisfies every filter; sorting stable under permutation; no capacity below zero.
+Every active V1 match has the ordered reason array:
+
+- `exact_route`
+- `date_window_fit`
+- `category_accepted`
+- `capacity_sufficient`
+
+The owner-only RPCs return safe listing fields, public display name and objective public trust counters/verification booleans. They exclude email, phone, legal name, residence, bio, declared contents, detailed description, handling notes, item photos/storage paths, account status, moderation state, audit data and internal rejection reasons.
+
+The base `matches` table has RLS enabled and no `anon` or `authenticated` grants or policies. Members cannot read, insert, update or forge projection rows. `get_trip_matches` requires the current active member to own the trip; `get_delivery_request_matches` requires ownership of the request. Anonymous execution is revoked. Both are tightly scoped `SECURITY DEFINER` functions with empty search paths and fully qualified objects because they must refresh a system-owned projection while using the member JWT as the actor boundary.
+
+## Version changes and booking boundary
+
+A future algorithm ships as an additive migration and a new version such as `v2`; it must not rewrite V1 semantics in place. Recompute can create V2 rows alongside V1, switch member RPCs after review, then deactivate or retain V1 according to notification/audit policy. Source versions make stale provenance explicit.
+
+Discovery is never booking evidence. Phase 1E compares the trip's offered capacity only. A later booking command must lock the trip, re-read eligibility and account state, subtract active reservations, enforce expected versions and create the booking/reservation atomically. A visible match may disappear or become unavailable before that command succeeds.

@@ -19,6 +19,7 @@ import {
   formatDimension,
   formatWeight,
 } from '@/modules/delivery-requests/validation';
+import { matchingCopy } from '@/modules/matching/copy';
 
 export default async function DeliveryRequestDetailPage({
   params,
@@ -220,9 +221,14 @@ export default async function DeliveryRequestDetailPage({
         </form>
       )}
       {request.status === 'published' && (
-        <Link href={`/${locale}/delivery-requests/public/${request.id}`}>
-          {d.viewPublic}
-        </Link>
+        <div className="flex flex-wrap gap-4">
+          <Link href={`/${locale}/delivery-requests/${request.id}/matches`}>
+            {matchingCopy[locale].requestMatches}
+          </Link>
+          <Link href={`/${locale}/delivery-requests/public/${request.id}`}>
+            {d.viewPublic}
+          </Link>
+        </div>
       )}
       <Link href={`/${locale}/delivery-requests`}>{d.back}</Link>
     </section>

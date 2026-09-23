@@ -1,5 +1,17 @@
 # Foundation verification record
 
+## Phase 1E local verification (2026-09-23)
+
+Phase 1E adds deterministic matching version `v1`, owner-only match projections and trigger-driven idempotent recomputation. Frozen install, formatting, zero-warning lint, strict typecheck, 77 unit tests, scoped coverage (98.68% statements / 95.83% branches), a production webpack build and all four authenticated Chromium scenarios pass locally. The standard Turbopack build remains a CI check because this macOS sandbox denies its internal loopback binding.
+
+The local database rebuild, database lint, 200 pgTAP assertions and direct matching Data API check pass. The matching suite covers inclusive date boundaries, route/category/capacity eligibility, restricted accounts, self-match exclusion, lifecycle invalidation, deterministic score/order, duplicate prevention, owner isolation and denial of direct match-table/recompute forgery. Existing Auth lifecycle, profile/Storage, trip and delivery-request authorization runners also pass. The repository scanner found no known credential patterns or tracked environment files in the working tree or reachable Git history, and Gitleaks 8.30.1 found no issue in reachable history.
+
+The exact implementation head passed GitHub quality and database jobs, including the standard Turbopack build, coverage, Playwright, database reset/lint, 200 pgTAP assertions, every direct authorization runner and the complete authenticated browser flow. The existing Vercel Git integration produced a successful Preview for that exact commit.
+
+Migration `phase_1e_deterministic_matching` is applied only to staging project `xivkbucvwsioxevlijzj`. A rolled-back staging audit passed owner projections, cross-owner denial, base-table write/read denial and private recomputation denial. Forced index-plan checks exercised the existing published route/window and category indexes. Supabase advisors report the expected policy-free default-deny match table and authenticated `SECURITY DEFINER` RPC notices; the two match RPCs intentionally require active-owner checks, fixed empty search paths and narrow return shapes.
+
+Hosted verification used two synthetic staging members. It covered published trip/request creation, exact date/capacity/category/route compatibility, both owner match views, deterministic `v1` reasons and fit values, English and Arabic RTL rendering, clean 404 cross-owner denial, and immediate invalidation after request cancellation. The two Auth users and every associated profile, trip, request, event and match row were deleted; a final query returned zero fixtures. Production was not accessed.
+
 ## Phase 1D verification (2026-09-22)
 
 Phase 1D is implemented on `codex/phase-1d-delivery-requests`. Formatting, zero-warning lint, strict typecheck, 74 Vitest tests and a clean Next.js production build pass. Four Chromium tests pass, including the full authenticated lifecycle and delivery request draft, private photo add/remove, publish, narrow public view, French navigation, Arabic RTL and cancellation.
