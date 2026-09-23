@@ -46,9 +46,9 @@ Each phase is independently reviewable and must pass its own security, database,
 
 Implemented sender requests, a V1 declared shipment item, private item photos and versioned lifecycle commands using normalized locations. Category, exact measurement, flexible date-window, public projection, audit and expiration boundaries are database-backed. Matching and booking remain excluded.
 
-## Phase 1E — deterministic matching (implemented and staging-verified)
+## Phase 1E — deterministic matching (complete)
 
-Implemented versioned advisory projections, exact route/date/category/capacity eligibility, transparent deterministic ranking, owner-only match views, bounded idempotent recomputation and automatic invalidation. Local pgTAP, Data API and application checks cover boundaries, forgery denial, stable ordering, self-match, restrictions and lifecycle invalidation. Staging migration and hosted verification remain before merge.
+Implemented versioned advisory projections, exact route/date/category/capacity eligibility, transparent deterministic ranking, owner-only match views, bounded idempotent recomputation and automatic invalidation. Local pgTAP, Data API and application checks cover boundaries, forgery denial, stable ordering, self-match, restrictions and lifecycle invalidation. The staging migration, hosted verification, synthetic-data cleanup, exact-head CI and merge are complete.
 
 ## Phase 4 — bookings and messaging
 
