@@ -30,4 +30,6 @@ The projection returns status, public counterparty reference/display name, route
 
 Server-controlled events cover proposal, acceptance, rejection, cancellation, expiration, reservation creation and release. Metadata is limited to non-sensitive capacity facts. Failed capacity attempts roll back and return a safe conflict; they cannot be logged inside that failed transaction.
 
+The event actor foreign key has a partial covering index. Supabase's advisor also flags the composite booking→match and reservation→booking foreign keys, but their first columns are already covered by the unique `bookings.match_id` and primary-key `capacity_reservations.booking_id` indexes used for parent-row maintenance; duplicate composites are intentionally omitted.
+
 Phase 1E matching now evaluates available capacity. Matches remain advisory because acceptance always revalidates and reserves atomically. A future payment phase must add independent payment states; browser redirects can never prove payment.
