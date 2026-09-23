@@ -4,7 +4,7 @@
 
 The additive Phase 1F migration may reach staging project `xivkbucvwsioxevlijzj` only after exact-head CI passes. The existing Git-backed Vercel project must supply the Preview for that same commit. Hosted verification uses synthetic participant/listing/booking data and removes it afterward. Production remains disabled and must not receive this migration.
 
-The booking/reservation migration is applied to staging. The initial Git-backed Preview for commit `5e6ee7234d52059276188382ebe765d78f247721` completed and passed the hosted participant flow. Synthetic users, sessions, profiles, listings, matches, booking, reservation, receipts and events were deleted afterward. The additive booking-event actor index awaits its own final exact-head CI before staging application. Production project `mcmeroatheonlgxvveyl` remains untouched.
+Both Phase 1F migrations are applied to staging. The Git-backed Preview for implementation commit `5e6ee7234d52059276188382ebe765d78f247721` passed the hosted participant flow; the follow-up exact head `087154ea1279b6bde4b2e0b7544b69408bb4afc5` passed quality, database and Vercel checks before the actor index was applied. Synthetic users, sessions, profiles, listings, matches, booking, reservation, receipts and events were deleted afterward. Production project `mcmeroatheonlgxvveyl` remains untouched.
 
 ## Phase 1E staging deployment
 
