@@ -1,3 +1,7 @@
+import { RouteDisplay } from '@/components/ui/patterns';
+import { EmptyState } from '@/components/ui/patterns';
+import { uiCopy } from '@/lib/ui/copy';
+import { StatusBadge } from '@/components/ui/patterns';
 import Link from 'next/link';
 import { safeLocale } from '@/lib/auth/validation';
 import { categoryLabel, tripCopy } from '@/modules/trips/copy';
@@ -33,17 +37,26 @@ export default async function TripsPage({
               : d.failed}
         </p>
       )}
-      {trips.length === 0 && <p>{d.noTrips}</p>}
+      {trips.length === 0 && (
+        <EmptyState
+          title={d.noTrips}
+          description={uiCopy[locale].emptyTrips}
+          href={`/${locale}/trips/new`}
+          action={d.createTrip}
+          icon="plane"
+        />
+      )}
       <ul className="grid gap-4">
         {trips.map((trip) => (
           <li className="space-y-2 rounded-xl border p-4" key={trip.id}>
             <div className="flex items-center justify-between gap-3">
               <strong>
-                {trip.origin.canonical_name} → {trip.destination.canonical_name}
+                <RouteDisplay
+                  origin={trip.origin.canonical_name}
+                  destination={trip.destination.canonical_name}
+                />
               </strong>
-              <span className="rounded-full border px-2 py-1 text-sm">
-                {d[trip.status]}
-              </span>
+              <StatusBadge status={trip.status}>{d[trip.status]}</StatusBadge>
             </div>
             <p>
               {formatTripDate(trip.departure_at, trip.origin.timezone, locale)}

@@ -1,3 +1,7 @@
+import { RouteDisplay } from '@/components/ui/patterns';
+import { EmptyState } from '@/components/ui/patterns';
+import { uiCopy } from '@/lib/ui/copy';
+import { StatusBadge } from '@/components/ui/patterns';
 import Link from 'next/link';
 import { safeLocale } from '@/lib/auth/validation';
 import {
@@ -39,18 +43,28 @@ export default async function DeliveryRequestsPage({
               : d.failed}
         </p>
       )}
-      {requests.length === 0 && <p>{d.noRequests}</p>}
+      {requests.length === 0 && (
+        <EmptyState
+          title={d.noRequests}
+          description={uiCopy[locale].emptyRequests}
+          href={`/${locale}/delivery-requests/new`}
+          action={d.createRequest}
+          icon="parcel"
+        />
+      )}
       <ul className="grid gap-4">
         {requests.map((request) => (
           <li className="space-y-2 rounded-xl border p-4" key={request.id}>
             <div className="flex items-center justify-between gap-3">
               <strong>
-                {request.origin.canonical_name} →{' '}
-                {request.destination.canonical_name}
+                <RouteDisplay
+                  origin={request.origin.canonical_name}
+                  destination={request.destination.canonical_name}
+                />
               </strong>
-              <span className="rounded-full border px-2 py-1 text-sm">
+              <StatusBadge status={request.status}>
                 {d[request.status]}
-              </span>
+              </StatusBadge>
             </div>
             <p>
               {formatRequestDate(

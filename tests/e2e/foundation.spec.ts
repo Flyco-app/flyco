@@ -6,7 +6,7 @@ test('foundation shell renders without client failures', async ({ page }) => {
   const response = await page.goto('/');
   expect(response?.status()).toBe(200);
   await expect(
-    page.getByRole('heading', { name: 'Flyco', exact: true }),
+    page.getByRole('heading', { name: /Sur votre chemin/ }),
   ).toBeVisible();
   await expect(page.locator('html')).toHaveAttribute('lang', 'fr');
   expect(response?.headers()['x-content-type-options']).toBe('nosniff');

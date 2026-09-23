@@ -1,3 +1,6 @@
+import { RouteDisplay } from '@/components/ui/patterns';
+import { EmptyState } from '@/components/ui/patterns';
+import { uiCopy } from '@/lib/ui/copy';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
@@ -33,7 +36,12 @@ export default async function TripMatchesPage({
       <h1 className="text-2xl font-semibold">{d.tripMatches}</h1>
       <p className="rounded-xl border p-3 text-sm">{d.advisory}</p>
       {matches.length === 0 ? (
-        <p>{d.noMatches}</p>
+        <EmptyState
+          title={d.noMatches}
+          description={uiCopy[locale].emptyMatches}
+          href={`/${locale}/trips/${input.id}`}
+          action={d.backToTrip}
+        />
       ) : (
         <ul className="grid gap-4">
           {matches.map((match) => (
@@ -43,7 +51,10 @@ export default async function TripMatchesPage({
                 <span>{requestCategoryLabel(locale, match.categoryCode)}</span>
               </div>
               <p>
-                {match.originName} → {match.destinationName}
+                <RouteDisplay
+                  origin={match.originName}
+                  destination={match.destinationName}
+                />
               </p>
               <p>
                 {formatRequestDate(
@@ -73,21 +84,13 @@ export default async function TripMatchesPage({
                   {d.reviews}: {match.reviewCount}
                 </li>
               </ul>
-              <div>
+              <div className="match-explanation">
                 <h3 className="font-medium">{d.explanation}</h3>
-                <ul className="list-inside list-disc text-sm">
+                <ul className="reason-list">
                   {match.reasonCodes.map((reason) => (
                     <li key={reason}>{reasonLabel(locale, reason)}</li>
                   ))}
                 </ul>
-                <p className="text-sm">
-                  {d.dateFit}: {match.dateSlackMinutes} {d.minutes} ·{' '}
-                  {d.capacityFit}:{' '}
-                  {formatWeight(match.capacitySlackGrams, locale)}
-                </p>
-                <p className="text-sm">
-                  {d.algorithm}: {match.algorithmVersion}
-                </p>
               </div>
               <Link
                 href={`/${locale}/delivery-requests/public/${match.deliveryRequestId}`}

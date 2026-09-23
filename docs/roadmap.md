@@ -54,6 +54,12 @@ Implemented versioned advisory projections, exact route/date/category/capacity e
 
 Implements sender-initiated proposals, participant-only projections, explicit pre-payment lifecycle commands and atomic integer-gram reservations. Acceptance locks the booking and trip, revalidates the matching opportunity, prevents oversubscription and recomputes affected matches. Local unit, pgTAP, direct Data API concurrency and browser coverage must pass before staging promotion. Payments, messaging and fulfillment remain excluded.
 
+## Phase 1G — coherent product experience (complete)
+
+Redesigns the existing Auth, profile, trip, delivery-request, matching and booking flows as one mobile-first marketplace. It introduces the Flyco design tokens and shared UI patterns, a real bilingual-role homepage, authenticated desktop/mobile navigation, guided forms, human lifecycle copy, intentional empty/loading/error states, and complete FR/EN/AR RTL behavior. It changes no database or security boundary and adds no dependency.
+
+**Definition of done:** complete route audit, responsive visual system, consistent lifecycle and trust presentation, pending/destructive action feedback, keyboard and RTL checks, preserved domain/security coverage, exact-head CI and Git-backed preview inspection at mobile and desktop widths.
+
 ## Phase 4 — bookings and messaging
 
 Implement the reviewed booking state machine, atomic capacity reservation, participant-only conversations, confirmation evidence and dispute entry points. Protect every transition with expected-version checks, locks, idempotency and audit events.

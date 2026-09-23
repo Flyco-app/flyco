@@ -1,6 +1,6 @@
+import { TrustPanel } from '@/components/ui/trust-panel';
 import { notFound } from 'next/navigation';
 import { createSupabaseServerClient } from '@/lib/supabase/server';
-import { dictionaries } from '@/lib/auth/dictionaries';
 import { safeLocale } from '@/lib/auth/validation';
 import { AvatarImage } from '@/lib/profile/avatar-image';
 import { getServerEnv } from '@/lib/env/server';
@@ -39,15 +39,11 @@ export default async function PublicProfilePage({
     });
     notFound();
   }
-  const d = dictionaries[locale];
   const { SUPABASE_URL } = getServerEnv();
   const avatarUrl =
     profile.data.avatar_path && SUPABASE_URL
       ? `${SUPABASE_URL}/storage/v1/object/public/avatars/${profile.data.avatar_path}`
       : null;
-  const average = trust.data.review_count
-    ? (trust.data.rating_sum / trust.data.review_count / 100).toFixed(1)
-    : null;
   return (
     <section className="space-y-4">
       <h1 className="text-2xl font-semibold">{profile.data.display_name}</h1>
@@ -55,25 +51,15 @@ export default async function PublicProfilePage({
         <AvatarImage src={avatarUrl} alt={profile.data.display_name} />
       )}
       {profile.data.bio && <p>{profile.data.bio}</p>}
-      <dl className="grid gap-2 rounded-xl border p-4">
-        <dt className="font-semibold">{d.trust}</dt>
-        <dd>
-          {d.emailVerified}: {trust.data.email_verified ? '✓' : '—'}
-        </dd>
-        <dd>
-          {d.phoneVerified}: {trust.data.phone_verified ? '✓' : '—'}
-        </dd>
-        <dd>
-          {d.identityVerified}: {trust.data.identity_verified ? '✓' : '—'}
-        </dd>
-        <dd>
-          {d.completed}: {trust.data.completed_deliveries}
-        </dd>
-        <dd>
-          {d.reviews}: {trust.data.review_count}
-          {average ? ` · ${average}/5` : ''}
-        </dd>
-      </dl>
+      <TrustPanel
+        locale={locale}
+        email={trust.data.email_verified}
+        phone={trust.data.phone_verified}
+        identity={trust.data.identity_verified}
+        completed={trust.data.completed_deliveries}
+        reviews={trust.data.review_count}
+        memberSince={profile.data.created_at}
+      />
     </section>
   );
 }

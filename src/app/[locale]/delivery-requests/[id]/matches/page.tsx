@@ -1,3 +1,7 @@
+import { RouteDisplay } from '@/components/ui/patterns';
+import { EmptyState } from '@/components/ui/patterns';
+import { uiCopy } from '@/lib/ui/copy';
+import { SubmitButton } from '@/components/ui/submit-button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
@@ -48,7 +52,12 @@ export default async function DeliveryRequestMatchesPage({
       <h1 className="text-2xl font-semibold">{d.requestMatches}</h1>
       <p className="rounded-xl border p-3 text-sm">{d.advisory}</p>
       {matches.length === 0 ? (
-        <p>{d.noMatches}</p>
+        <EmptyState
+          title={d.noMatches}
+          description={uiCopy[locale].emptyMatches}
+          href={`/${locale}/delivery-requests/${input.id}`}
+          action={d.backToRequest}
+        />
       ) : (
         <ul className="grid gap-4">
           {matches.map((match) => {
@@ -60,7 +69,10 @@ export default async function DeliveryRequestMatchesPage({
               >
                 <div className="flex flex-wrap items-center justify-between gap-2">
                   <h2 className="font-semibold">
-                    {match.originName} → {match.destinationName}
+                    <RouteDisplay
+                      origin={match.originName}
+                      destination={match.destinationName}
+                    />
                   </h2>
                   <span>{formatWeight(match.tripCapacityGrams, locale)}</span>
                 </div>
@@ -96,21 +108,13 @@ export default async function DeliveryRequestMatchesPage({
                     {d.reviews}: {match.reviewCount}
                   </li>
                 </ul>
-                <div>
+                <div className="match-explanation">
                   <h3 className="font-medium">{d.explanation}</h3>
-                  <ul className="list-inside list-disc text-sm">
+                  <ul className="reason-list">
                     {match.reasonCodes.map((reason) => (
                       <li key={reason}>{reasonLabel(locale, reason)}</li>
                     ))}
                   </ul>
-                  <p className="text-sm">
-                    {d.dateFit}: {match.dateSlackMinutes} {d.minutes} ·{' '}
-                    {d.capacityFit}:{' '}
-                    {formatWeight(match.capacitySlackGrams, locale)}
-                  </p>
-                  <p className="text-sm">
-                    {d.algorithm}: {match.algorithmVersion}
-                  </p>
                 </div>
                 <Link href={`/${locale}/trips/public/${match.tripId}`}>
                   {d.viewListing}
@@ -131,12 +135,13 @@ export default async function DeliveryRequestMatchesPage({
                       name="idempotencyKey"
                       value={crypto.randomUUID()}
                     />
-                    <button
-                      className="rounded-md bg-black px-4 py-2 text-white"
+                    <SubmitButton
+                      locale={locale}
+                      className="button"
                       type="submit"
                     >
                       {bd.propose}
-                    </button>
+                    </SubmitButton>
                   </form>
                 )}
               </li>

@@ -4,7 +4,7 @@ import './globals.css';
 
 export const metadata: Metadata = {
   title: 'Flyco',
-  description: 'Flyco engineering foundation.',
+  description: 'Send items with travelers already going your way.',
   robots: { index: false, follow: false },
 };
 

@@ -1,3 +1,5 @@
+import { uiCopy } from '@/lib/ui/copy';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { logOut } from '@/lib/auth/actions';
 import { dictionaries } from '@/lib/auth/dictionaries';
 import { safeLocale } from '@/lib/auth/validation';
@@ -10,10 +12,12 @@ export default async function Page({
   const d = dictionaries[locale];
   return (
     <section className="space-y-4">
-      <p role="alert">This account is unavailable. Contact support.</p>
+      <p role="alert">{uiCopy[locale].unavailable}</p>
       <form action={logOut}>
         <input type="hidden" name="locale" value={locale} />
-        <button type="submit">{d.logout}</button>
+        <SubmitButton locale={locale} type="submit">
+          {d.logout}
+        </SubmitButton>
       </form>
     </section>
   );

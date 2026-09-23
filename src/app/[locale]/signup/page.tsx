@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { uiCopy } from '@/lib/ui/copy';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { signUp } from '@/lib/auth/actions';
 import { dictionaries } from '@/lib/auth/dictionaries';
 import { safeLocale } from '@/lib/auth/validation';
@@ -12,8 +15,10 @@ export default async function Page({
   const d = dictionaries[locale];
   const { error } = await searchParams;
   return (
-    <section className="space-y-4">
+    <section className="auth-panel space-y-5">
+      <p className="auth-kicker">{uiCopy[locale].authIntro}</p>
       <h1 className="text-2xl font-semibold">{d.signup}</h1>
+      <p>{uiCopy[locale].signupHint}</p>
       {error && <p role="alert">{d.genericError}</p>}
       <form action={signUp} className="grid gap-4">
         <input type="hidden" name="locale" value={locale} />
@@ -44,15 +49,23 @@ export default async function Page({
             className="field"
             name="password"
             type="password"
+            aria-describedby="password-help"
             minLength={12}
             required
             autoComplete="new-password"
           />
         </label>
-        <button className="button" type="submit">
+        <SubmitButton locale={locale} className="button" type="submit">
           {d.signup}
-        </button>
+        </SubmitButton>
       </form>
+      <p id="password-help" className="text-sm">
+        {uiCopy[locale].passwordHint}
+      </p>
+      <p className="auth-switch">
+        {uiCopy[locale].already}{' '}
+        <Link href={`/${locale}/login`}>{d.login}</Link>
+      </p>
     </section>
   );
 }

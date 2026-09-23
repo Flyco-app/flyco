@@ -1,3 +1,7 @@
+import { uiCopy } from '@/lib/ui/copy';
+import { verificationLabel } from '@/lib/ui/status';
+import { StatusBadge } from '@/components/ui/patterns';
+import { SubmitButton } from '@/components/ui/submit-button';
 import Link from 'next/link';
 import {
   cancelIdentityVerification,
@@ -42,92 +46,110 @@ export default async function Page({
     <section className="space-y-5">
       <h1 className="text-2xl font-semibold">{d.settings}</h1>
       {error && <p role="alert">{d.genericError}</p>}
-      {notice && <p role="status">{d.save}</p>}
+      {notice && <p role="status">{uiCopy[locale].saved}</p>}
       <p>{user.email}</p>
-      <form action={updateProfile} className="grid gap-4">
-        <input type="hidden" name="locale" value={locale} />
-        <label>
-          {d.name}
-          <input
-            className="field"
-            name="displayName"
-            defaultValue={publicProfile.display_name}
-            minLength={2}
-            maxLength={80}
-            required
-          />
-        </label>
-        <label>
-          {d.firstName}
-          <input
-            className="field"
-            name="firstName"
-            defaultValue={profile.first_name ?? ''}
-            maxLength={80}
-            autoComplete="given-name"
-          />
-        </label>
-        <label>
-          {d.lastName}
-          <input
-            className="field"
-            name="lastName"
-            defaultValue={profile.last_name ?? ''}
-            maxLength={80}
-            autoComplete="family-name"
-          />
-        </label>
-        <label>
-          {d.phone}
-          <input
-            className="field"
-            name="phone"
-            defaultValue={profile.phone_e164 ?? ''}
-            inputMode="tel"
-            placeholder="+33612345678"
-          />
-        </label>
-        <label>
-          {d.bio}
-          <textarea
-            className="field min-h-28"
-            name="bio"
-            defaultValue={publicProfile.bio ?? ''}
-            maxLength={500}
-          />
-        </label>
-        <label>
-          {d.residence}
-          <select
-            className="field"
-            name="residenceLocationId"
-            defaultValue={publicProfile.residence_location_id ?? ''}
-          >
-            <option value="">—</option>
-            {locations.data.map((location) => (
-              <option key={location.id} value={location.id}>
-                {location.canonical_name}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          {d.language}
-          <select className="field" name="locale" defaultValue={profile.locale}>
-            <option value="fr">Français</option>
-            <option value="en">English</option>
-            <option value="ar">العربية</option>
-          </select>
-        </label>
-        <button className="button" type="submit">
-          {d.save}
-        </button>
-      </form>
+      <section className="rounded-xl border p-4 space-y-4">
+        <h2 className="font-semibold">{uiCopy[locale].personal}</h2>
+        <p className="text-sm text-muted-foreground">
+          {uiCopy[locale].privateHint}
+        </p>
+        <form action={updateProfile} className="form-grid">
+          <label>
+            {d.name}
+            <input
+              className="field"
+              name="displayName"
+              defaultValue={publicProfile.display_name}
+              minLength={2}
+              maxLength={80}
+              required
+            />
+          </label>
+          <label>
+            {d.firstName}
+            <input
+              className="field"
+              name="firstName"
+              defaultValue={profile.first_name ?? ''}
+              maxLength={80}
+              autoComplete="given-name"
+            />
+          </label>
+          <label>
+            {d.lastName}
+            <input
+              className="field"
+              name="lastName"
+              defaultValue={profile.last_name ?? ''}
+              maxLength={80}
+              autoComplete="family-name"
+            />
+          </label>
+          <label>
+            {d.phone}
+            <input
+              className="field"
+              name="phone"
+              defaultValue={profile.phone_e164 ?? ''}
+              type="tel"
+              aria-describedby="phone-hint"
+              inputMode="tel"
+              placeholder="+33612345678"
+            />
+          </label>
+          <p id="phone-hint" className="text-sm text-muted-foreground">
+            {uiCopy[locale].phoneHint}
+          </p>
+          <label>
+            {d.bio}
+            <textarea
+              className="field min-h-28"
+              name="bio"
+              defaultValue={publicProfile.bio ?? ''}
+              maxLength={500}
+            />
+          </label>
+          <label>
+            {d.residence}
+            <select
+              className="field"
+              name="residenceLocationId"
+              defaultValue={publicProfile.residence_location_id ?? ''}
+            >
+              <option value="">—</option>
+              {locations.data.map((location) => (
+                <option key={location.id} value={location.id}>
+                  {location.canonical_name}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            {d.language}
+            <select
+              className="field"
+              name="locale"
+              defaultValue={profile.locale}
+            >
+              <option value="fr">Français</option>
+              <option value="en">English</option>
+              <option value="ar">العربية</option>
+            </select>
+          </label>
+          <SubmitButton locale={locale} className="button" type="submit">
+            {d.save}
+          </SubmitButton>
+        </form>
+      </section>
       <form
         action={uploadAvatar}
-        className="grid gap-4"
+        className="grid gap-4 rounded-xl border p-4"
         encType="multipart/form-data"
       >
+        <h2 className="font-semibold">{d.avatar}</h2>
+        <p className="text-sm text-muted-foreground">
+          {uiCopy[locale].photoHint}
+        </p>
         {avatarUrl && (
           <AvatarImage src={avatarUrl} alt={publicProfile.display_name} />
         )}
@@ -142,25 +164,32 @@ export default async function Page({
             required
           />
         </label>
-        <button className="button" type="submit">
+        <SubmitButton locale={locale} className="button" type="submit">
           {d.uploadAvatar}
-        </button>
+        </SubmitButton>
       </form>
       {publicProfile.avatar_path && (
         <form action={removeAvatar}>
           <input type="hidden" name="locale" value={locale} />
-          <button type="submit">{d.removeAvatar}</button>
+          <SubmitButton locale={locale} type="submit">
+            {d.removeAvatar}
+          </SubmitButton>
         </form>
       )}
       <section className="grid gap-3 rounded-xl border p-4">
         <h2 className="font-semibold">{d.verification}</h2>
-        <p>{verification?.state ?? 'not_started'}</p>
+        <StatusBadge status={verification?.state ?? 'draft'}>
+          {verificationLabel(locale, verification?.state)}
+        </StatusBadge>
+        <p className="text-sm text-muted-foreground">
+          {uiCopy[locale].verificationUnavailable}
+        </p>
         {!verification && (
           <form action={startIdentityVerification}>
             <input type="hidden" name="locale" value={locale} />
-            <button className="button" type="submit">
+            <SubmitButton locale={locale} className="button" type="submit">
               {d.startVerification}
-            </button>
+            </SubmitButton>
           </form>
         )}
         {verification &&
@@ -177,31 +206,38 @@ export default async function Page({
                 name="version"
                 value={verification.version}
               />
-              <button type="submit">{d.cancelVerification}</button>
+              <SubmitButton locale={locale} type="submit">
+                {d.cancelVerification}
+              </SubmitButton>
             </form>
           )}
       </section>
-      <form action={changeEmail} className="grid gap-4">
-        <input type="hidden" name="locale" value={locale} />
-        <label>
-          {d.email}
-          <input
-            className="field"
-            name="email"
-            type="email"
-            required
-            autoComplete="email"
-          />
-        </label>
-        <button className="button" type="submit">
-          {d.email}
-        </button>
-      </form>
-      <Link href={`/${locale}/reset-password`}>{d.reset}</Link>
-      <form action={logOut}>
-        <input type="hidden" name="locale" value={locale} />
-        <button type="submit">{d.logout}</button>
-      </form>
+      <section className="rounded-xl border p-4 space-y-4">
+        <h2 className="font-semibold">{uiCopy[locale].security}</h2>
+        <form action={changeEmail} className="grid gap-4">
+          <input type="hidden" name="locale" value={locale} />
+          <label>
+            {d.email}
+            <input
+              className="field"
+              name="email"
+              type="email"
+              required
+              autoComplete="email"
+            />
+          </label>
+          <SubmitButton locale={locale} className="button" type="submit">
+            {uiCopy[locale].changeEmail}
+          </SubmitButton>
+        </form>
+        <Link href={`/${locale}/reset-password`}>{d.reset}</Link>
+        <form action={logOut}>
+          <input type="hidden" name="locale" value={locale} />
+          <SubmitButton locale={locale} type="submit">
+            {d.logout}
+          </SubmitButton>
+        </form>
+      </section>
     </section>
   );
 }

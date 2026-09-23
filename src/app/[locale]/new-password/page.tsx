@@ -1,3 +1,6 @@
+import Link from 'next/link';
+import { uiCopy } from '@/lib/ui/copy';
+import { SubmitButton } from '@/components/ui/submit-button';
 import { changePassword } from '@/lib/auth/actions';
 import { getVerifiedIdentity } from '@/lib/auth/session';
 import { dictionaries } from '@/lib/auth/dictionaries';
@@ -15,8 +18,10 @@ export default async function Page({
   if (!(await getVerifiedIdentity())) redirect(`/${locale}/login`);
   const { error } = await searchParams;
   return (
-    <section className="space-y-4">
+    <section className="auth-panel space-y-5">
+      <p className="auth-kicker">{uiCopy[locale].authIntro}</p>
       <h1 className="text-2xl font-semibold">{d.newPassword}</h1>
+      <p>{uiCopy[locale].passwordHint}</p>
       {error && <p role="alert">{d.genericError}</p>}
       <form action={changePassword} className="grid gap-4">
         <input type="hidden" name="locale" value={locale} />
@@ -31,10 +36,14 @@ export default async function Page({
             autoComplete="new-password"
           />
         </label>
-        <button className="button" type="submit">
+        <SubmitButton locale={locale} className="button" type="submit">
           {d.save}
-        </button>
+        </SubmitButton>
       </form>
+      <p className="auth-switch">
+        {uiCopy[locale].backLogin}{' '}
+        <Link href={`/${locale}/login`}>{d.login}</Link>
+      </p>
     </section>
   );
 }

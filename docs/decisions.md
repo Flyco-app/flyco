@@ -1,5 +1,14 @@
 # Authentication and authorization
 
+## Phase 1G decisions
+
+| ID  | Decision                                                      | Reason / reconsider when                                                                                           |
+| --- | ------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| A33 | One responsive shell for both sender and traveler activity    | One account performs both roles; reconsider only if future research proves separate workspaces reduce confusion    |
+| A34 | Keep matches contextual to their trip or delivery request     | Mirrors current authorization and query boundaries; add global discovery only with its own implemented contract    |
+| A35 | Use guided single-page listing forms rather than client steps | Adds consumer guidance without partial-draft synchronization; revisit only if measured completion data supports it |
+| A36 | Keep the UI system source-owned with no new dependency        | Native controls and small primitives meet current needs; add a package only for a concrete accessible behavior     |
+
 ## Phase 1F decisions
 
 | ID  | Decision                                     | Reason / reconsider when                                                                                      |

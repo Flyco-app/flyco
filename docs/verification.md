@@ -1,5 +1,17 @@
 # Foundation verification record
 
+## Phase 1G local product-UI verification (2026-09-23)
+
+- Frozen pnpm install completed with the committed lockfile; no dependency was added.
+- Formatting, ESLint, strict TypeScript, 82 unit tests and the Next.js production build passed.
+- Coverage remained 98.68% statements, 95.83% branches and 100% functions/lines for the measured server modules.
+- Database lint, all 235 pgTAP tests, and the direct booking isolation/concurrent-capacity check passed unchanged. No database migration exists in Phase 1G.
+- Fifteen Playwright cases passed against local Supabase. They cover the complete Auth/profile/trip/request lifecycle, two-party proposal/accept/cancel flow, responsive FR/EN/AR public UI at 360px/768px/1440px, Arabic RTL, overflow, keyboard skip navigation and localized not-found recovery.
+- Working tree and reachable-history secret scanning found no credential pattern or tracked environment file.
+- Manual rendered-page review covered the English desktop homepage and Auth panel plus the Arabic mobile homepage. It found no clipping, horizontal overflow, broken hierarchy, misplaced directionality or inaccessible primary action. The final Git-backed preview review is recorded with the exact head after CI.
+
+Implementation head `3b73a3692563d7151b63785e5f6fe742a69ce1f7` passed the GitHub quality job (1m22s), database job (3m43s), and Vercel checks. The Git-backed deployment `https://flyco-89drhu97u-faridiali27-5309s-projects.vercel.app` was associated with that exact SHA. Authenticated browser access to the protected preview confirmed the rendered English homepage, Arabic RTL homepage and English sign-in page. The deployed UI matched the local responsive visual review; no infrastructure or database change was made.
+
 ## Phase 1F verification
 
 Phase 1F adds unit validation/copy tests, pgTAP state/grant/RLS tests, a direct Data API two-sender concurrent acceptance race, and a two-account Playwright proposal/accept/cancel/RTL flow. The database checks prove one 3,000 g reservation wins when two proposals compete for a 5,000 g trip, the loser cannot oversubscribe, cancellation releases the hold and matching reactivates. They also cover stale versions, restricted accounts, participant isolation, direct forgery denial, retries and expiration. Exact-head CI, staging migration and hosted evidence are recorded only after completion.

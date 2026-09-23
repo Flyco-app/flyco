@@ -1,3 +1,6 @@
+import { DestructiveSection } from '@/components/ui/patterns';
+import { StatusBadge } from '@/components/ui/patterns';
+import { SubmitButton } from '@/components/ui/submit-button';
 import Link from 'next/link';
 import { notFound } from 'next/navigation';
 import { safeLocale } from '@/lib/auth/validation';
@@ -24,7 +27,7 @@ export default async function TripDetailPage({
     <section className="space-y-5">
       <div className="flex items-center justify-between gap-3">
         <h1 className="text-2xl font-semibold">{d.tripDetail}</h1>
-        <span className="rounded-full border px-2 py-1">{d[trip.status]}</span>
+        <StatusBadge status={trip.status}>{d[trip.status]}</StatusBadge>
       </div>
       <dl className="grid gap-3 rounded-xl border p-4">
         <div>
@@ -68,22 +71,38 @@ export default async function TripDetailPage({
           <input type="hidden" name="locale" value={locale} />
           <input type="hidden" name="tripId" value={trip.id} />
           <input type="hidden" name="expectedVersion" value={trip.version} />
-          <button className="button" type="submit">
+          <SubmitButton locale={locale} className="button" type="submit">
             {d.publish}
-          </button>
+          </SubmitButton>
         </form>
       )}
       {editable && (
-        <form action={cancelTrip} className="grid gap-3 rounded-xl border p-4">
-          <input type="hidden" name="locale" value={locale} />
-          <input type="hidden" name="tripId" value={trip.id} />
-          <input type="hidden" name="expectedVersion" value={trip.version} />
-          <label>
-            {d.cancellationReason}
-            <textarea className="field" name="reason" required minLength={3} />
-          </label>
-          <button type="submit">{d.cancel}</button>
-        </form>
+        <DestructiveSection locale={locale} label={d.cancel} listing>
+          <form
+            action={cancelTrip}
+            className="grid gap-3 rounded-xl border p-4"
+          >
+            <input type="hidden" name="locale" value={locale} />
+            <input type="hidden" name="tripId" value={trip.id} />
+            <input type="hidden" name="expectedVersion" value={trip.version} />
+            <label>
+              {d.cancellationReason}
+              <textarea
+                className="field"
+                name="reason"
+                required
+                minLength={3}
+              />
+            </label>
+            <SubmitButton
+              locale={locale}
+              className="button button-danger"
+              type="submit"
+            >
+              {d.cancel}
+            </SubmitButton>
+          </form>
+        </DestructiveSection>
       )}
       {trip.status === 'published' && (
         <div className="flex flex-wrap gap-4">
