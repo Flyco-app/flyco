@@ -1,5 +1,7 @@
 # Marketplace policy and safety
 
+Phase 1J turns intake into an audited internal workflow. A report does not automatically impose an account action. A moderator must review it and record a normalized decision and rationale. Support and moderator permissions differ, and private evidence access logs purpose without copying content into audit rows.
+
 Phase 1I implements private booking-interaction reports. Intake categories are provisional routing labels, not legal conclusions. Reports reference immutable messages, do not notify the reported member, and do not automatically impose an account or booking action.
 
 Phase 1H adds a small, versioned policy layer around delivery-request publication and booking acceptance. It is product guidance, not legal advice. Terms and privacy routes are explicitly pre-launch structures and must not be treated as approved legal documents.

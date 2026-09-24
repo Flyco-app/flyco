@@ -1,5 +1,9 @@
 # Flyco product specification
 
+## Phase 1J internal operations
+
+MFA-authenticated staff review booking-scoped safety reports through an internal interface. Support handles safe metadata and notes; moderators inspect audited evidence, record decisions and restrict, suspend or restore a reported account. Members never see internal case handling. Notifications are durable for a future worker but are not externally delivered in this phase.
+
 Phase 1I adds private booking-scoped conversations from proposal onward. Proposed and accepted bookings allow plain-text messages; terminal bookings retain participant-readable history but reject new sends. Structured reports are limited to actual booking participants and remain hidden from member reads.
 
 ## Phase 1F booking scope

@@ -1,5 +1,11 @@
 # Authentication and authorization
 
+## Phase 1J staff and moderation controls
+
+`/admin` has an independent server/database boundary. Staff roles are private historical assignments; no metadata or profile field grants authority. Every staff RPC checks the current assignment, active account and Supabase `aal2`, so a stale JWT cannot preserve a revoked role. Support cannot read evidence or change accounts. Moderator/admin evidence reads are purpose-bound and audited before data is returned.
+
+Account actions lock the report and target profile, then write state, append-only decisions/audit and a notification event atomically. Suspension deletes refresh sessions; live status checks contain still-valid short access tokens. Moderation and outbox tables are RLS-enabled with no member grants. SECURITY DEFINER functions use an empty fixed search path and derive actors from `auth.uid()`.
+
 Phase 1I messaging/report tables have RLS enabled and no application-role table grants. Fixed-search-path RPCs derive the actor, verify booking participation/account status, constrain terminal sends and own sender/timestamp/report state. PostgreSQL user/conversation buckets provide serverless-safe throttling. Plain-text rendering and negative API tests cover XSS, IDOR and forgery.
 
 ## Phase 1F booking boundary

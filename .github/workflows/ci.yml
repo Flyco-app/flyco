@@ -58,6 +58,7 @@ jobs:
       - run: pnpm db:delivery-requests:check
       - run: pnpm db:matching:check
       - run: pnpm db:bookings:check
+      - run: pnpm db:moderation:check
       - run: pnpm exec playwright install --with-deps chromium
       - run: pnpm test:e2e:auth:local
       - run: pnpm db:stop

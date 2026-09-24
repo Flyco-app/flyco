@@ -35,7 +35,8 @@
     "db:trips:check": "node scripts/check-trips-api.mjs",
     "db:delivery-requests:check": "node scripts/check-delivery-requests-api.mjs",
     "db:matching:check": "node scripts/check-matching-api.mjs",
-    "db:bookings:check": "node scripts/check-bookings-api.mjs"
+    "db:bookings:check": "node scripts/check-bookings-api.mjs",
+    "db:moderation:check": "node scripts/check-moderation-api.mjs"
   },
   "dependencies": {
     "@sentry/nextjs": "10.75.0",

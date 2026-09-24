@@ -93,3 +93,11 @@ export async function requireActiveAccount(locale: Locale) {
     verification: verification.data,
   };
 }
+
+export async function requireAccountHistoryAccess(locale: Locale) {
+  const identity = await getVerifiedIdentity();
+  if (!identity) redirect(`/${locale}/login`);
+  const profile = await ensureOwnProfile(identity);
+  if (profile.account_status === 'closed') redirect(`/${locale}/unavailable`);
+  return { ...identity, profile };
+}

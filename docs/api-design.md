@@ -1,5 +1,11 @@
 # API and state design
 
+## Internal moderation commands
+
+Phase 1J exposes narrow RPCs for own staff capability, report queue/detail, review start, audited evidence read, notes, decisions/account actions and administrator-only role changes. Except for the opaque own-capability check, each requires live staff authority and AAL2 inside PostgreSQL. Clients never submit authoritative actor, report state, account owner, staff identity or outbox payload.
+
+The outbox worker interface is unavailable to member roles. Claiming is service-role-only, bounded and lock-safe; completion must present the same worker claim. Future provider consumers must be idempotent by event ID.
+
 Phase 1I exposes participant-only conversation projections, bounded cursor-based message history, send/mark-read commands and structured report submission. Clients never supply authoritative sender, participant, timestamp, report state or limiter values. No generic CRUD API exists.
 
 ## Phase 1F booking commands

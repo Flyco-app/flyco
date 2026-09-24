@@ -1,5 +1,13 @@
 # Flyco implementation roadmap
 
+## Phase 1J — internal moderation and notification outbox (implemented)
+
+**Objective:** give MFA-authenticated support and moderators a least-privilege report workflow, live account controls, audited evidence access and a durable notification boundary.
+
+**Implementation:** protected `/admin` routes; private live staff assignments; AAL2-enforced fixed-search-path RPCs; controlled `open → under_review → resolved|dismissed` reports; append-only notes, decisions and access/audit records; atomic restrictions/suspensions; refresh-session revocation on suspension; and an idempotent, service-worker-only outbox. No external notification worker or provider delivery is enabled.
+
+**Definition of done:** member/support/moderator/admin/revoked-role boundaries, MFA denial, immutable history, account effects and outbox claiming pass local and exact-head CI; the additive migration and staff flow are verified on staging; production remains untouched.
+
 ## Phase 1I — private booking messaging and reporting
 
 **Objective:** booking participants exchange bounded logistics messages and submit structured private reports without general chat or staff tooling.

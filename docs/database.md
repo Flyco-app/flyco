@@ -1,5 +1,9 @@
 # Database model and access design
 
+## Phase 1J operational schema
+
+`private.staff_role_assignments` stores grant/revocation history with one active assignment per user/role. `safety_reports` uses `open`, `under_review`, `resolved`, `dismissed`. `moderation_notes`, `moderation_decisions`, `evidence_access_events` and `moderation_audit_events` are append-only through commands. `notification_outbox` uses unique producer keys and bounded `FOR UPDATE SKIP LOCKED` claims. Base tables are default-deny to member roles; narrow RPCs are the application surface.
+
 Phase 1I adds `conversations` (unique per booking), `conversation_participants` (read cursors), immutable `messages`, private PostgreSQL limiter buckets, and default-deny `safety_reports`/`safety_report_events`. Foreign keys use `RESTRICT`; communication and safety evidence are not member-deletable. See [messaging](messaging.md) and [reporting](reporting.md).
 
 ## Phase 1F implemented schema

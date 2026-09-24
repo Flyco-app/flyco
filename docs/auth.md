@@ -1,6 +1,6 @@
 # Authentication and authorization
 
-Status: Phase 1A member authentication and Phase 1B profile/trust/location foundations are implemented locally and on staging; staff/admin authorization remains design only.
+Status: member authentication/profile controls and the Phase 1J staff boundary are implemented. Staff commands require a live private assignment and Supabase AAL2; metadata role claims are ignored.
 
 ## Identity
 
