@@ -1,5 +1,5 @@
 begin;
-select plan(26);
+select plan(30);
 
 select has_table('public','conversations','conversations exists');
 select has_table('public','conversation_participants','read state exists');
@@ -12,7 +12,11 @@ select col_is_pk('public','conversations','id','conversations have stable ids');
 select col_is_pk('public','conversation_participants',array['conversation_id','user_id'],'one read cursor per participant');
 select has_index('public','conversations','conversations_booking_id_key','one conversation per booking');
 select has_index('public','messages','messages_conversation_cursor_idx','message cursor is indexed');
+select has_index('public','messages','messages_sender_fk_idx','message sender FK is indexed');
+select has_index('public','conversation_events','conversation_events_actor_fk_idx','conversation event actor FK is indexed');
 select has_index('public','safety_reports','safety_reports_booking_created_idx','report context is indexed');
+select has_index('public','safety_reports','safety_reports_reporter_fk_idx','reporter FK is indexed');
+select has_index('public','safety_report_events','safety_report_events_actor_fk_idx','report event actor FK is indexed');
 select ok((select relrowsecurity from pg_class where oid='public.conversations'::regclass),'conversation RLS enabled');
 select ok((select relrowsecurity from pg_class where oid='public.conversation_participants'::regclass),'participant RLS enabled');
 select ok((select relrowsecurity from pg_class where oid='public.messages'::regclass),'message RLS enabled');
