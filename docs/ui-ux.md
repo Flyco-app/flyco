@@ -1,5 +1,9 @@
 # Phase 1G — product experience
 
+## Internal operations surface
+
+Phase 1J `/admin` is visually separate from the consumer shell: dense bounded tables, explicit evidence disclosure and named confirmations. It remains usable on mobile but prioritizes operational clarity. Staff without AAL2 see only TOTP enrollment/verification. The internal interface is English in Phase 1J; consumer FR/EN/AR behavior is unchanged.
+
 Phase 1I adds Messages navigation, a mobile-first booking inbox, contextual conversation screen, unread count, bounded plain-text composer and accessible private-report disclosures. FR/EN/AR copy uses logical layout for RTL. Explicit refresh is the V1 fallback.
 
 ## Baseline audit (before implementation)

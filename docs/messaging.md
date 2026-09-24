@@ -1,5 +1,7 @@
 # Booking messaging
 
+Phase 1J inserts a privacy-minimized `new_message` outbox event in the same transaction as each message. No message body is copied. No notification worker, SMS, push or per-message email delivery is enabled.
+
 Phase 1I provides one private conversation for every booking proposal. A database trigger derives the sender and traveler from the booking and creates one read cursor per participant. Arbitrary user-to-user conversations are impossible. Existing bookings are backfilled idempotently.
 
 Participants retain read access to history. New messages are accepted only while a booking is `proposed` or `accepted`; `rejected`, `cancelled` and `expired` conversations are read-only. Messages are immutable plain text, limited to 2,000 characters, with normalized line endings. React renders bodies as text. Attachments, edits, deletes, delivery receipts and Realtime are outside this phase.

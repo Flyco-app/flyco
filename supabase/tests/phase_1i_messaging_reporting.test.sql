@@ -30,7 +30,7 @@ select table_privs_are('public','messages','authenticated',array[]::text[],'memb
 select table_privs_are('public','safety_reports','authenticated',array[]::text[],'members cannot read reports');
 select table_privs_are('public','conversation_participants','authenticated',array[]::text[],'members cannot forge read cursors');
 select table_privs_are('private','message_rate_limits','authenticated',array[]::text[],'members cannot forge limiter state');
-select triggers_are('public','bookings',array['booking_conversation_after_insert'],'booking creates conversation');
+select has_trigger('public','bookings','booking_conversation_after_insert','booking creates conversation');
 
 select * from finish();
 rollback;

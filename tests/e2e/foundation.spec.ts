@@ -16,9 +16,13 @@ test('foundation shell renders without client failures', async ({ page }) => {
   expect(errors).toEqual([]);
 });
 
-test('admin is not accidentally exposed before authorization exists', async ({
+test('unauthenticated admin access is routed through verified sign-in', async ({
   page,
 }) => {
-  const response = await page.goto('/admin');
-  expect(response?.status()).toBe(404);
+  await page.goto('/admin');
+  await expect(page).toHaveURL(/\/en\/login$/);
+  await expect(page.locator('input[type=email]')).toBeVisible();
+  await expect(
+    page.getByRole('link', { name: 'Flyco Operations' }),
+  ).toHaveCount(0);
 });

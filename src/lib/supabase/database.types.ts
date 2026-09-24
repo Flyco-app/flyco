@@ -596,6 +596,51 @@ export type Database = {
           },
         ]
       }
+      evidence_access_events: {
+        Row: {
+          actor_id: string
+          created_at: string
+          id: number
+          purpose_code: string
+          report_id: string
+          resource_id: string
+          resource_type: string
+        }
+        Insert: {
+          actor_id: string
+          created_at?: string
+          id?: never
+          purpose_code: string
+          report_id: string
+          resource_id: string
+          resource_type: string
+        }
+        Update: {
+          actor_id?: string
+          created_at?: string
+          id?: never
+          purpose_code?: string
+          report_id?: string
+          resource_id?: string
+          resource_type?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "evidence_access_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "evidence_access_events_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "safety_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       identity_verification_events: {
         Row: {
           actor_kind: string
@@ -950,6 +995,229 @@ export type Database = {
           {
             foreignKeyName: "messages_sender_id_fkey"
             columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_audit_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: number
+          metadata: Json
+          report_id: string | null
+          target_user_id: string | null
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: never
+          metadata?: Json
+          report_id?: string | null
+          target_user_id?: string | null
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: never
+          metadata?: Json
+          report_id?: string | null
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_audit_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_audit_events_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "safety_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_audit_events_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_decisions: {
+        Row: {
+          account_state_after: string | null
+          account_state_before: string | null
+          actor_id: string
+          created_at: string
+          decision_code: string
+          id: string
+          rationale: string
+          reason_code: string
+          report_id: string
+          report_state_after: string
+          report_state_before: string
+          target_user_id: string | null
+        }
+        Insert: {
+          account_state_after?: string | null
+          account_state_before?: string | null
+          actor_id: string
+          created_at?: string
+          decision_code: string
+          id?: string
+          rationale: string
+          reason_code: string
+          report_id: string
+          report_state_after: string
+          report_state_before: string
+          target_user_id?: string | null
+        }
+        Update: {
+          account_state_after?: string | null
+          account_state_before?: string | null
+          actor_id?: string
+          created_at?: string
+          decision_code?: string
+          id?: string
+          rationale?: string
+          reason_code?: string
+          report_id?: string
+          report_state_after?: string
+          report_state_before?: string
+          target_user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_decisions_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_decisions_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "safety_reports"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_decisions_target_user_id_fkey"
+            columns: ["target_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      moderation_notes: {
+        Row: {
+          author_id: string
+          body: string
+          created_at: string
+          id: string
+          report_id: string
+        }
+        Insert: {
+          author_id: string
+          body: string
+          created_at?: string
+          id?: string
+          report_id: string
+        }
+        Update: {
+          author_id?: string
+          body?: string
+          created_at?: string
+          id?: string
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "moderation_notes_author_id_fkey"
+            columns: ["author_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "moderation_notes_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "safety_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      notification_outbox: {
+        Row: {
+          attempt_count: number
+          available_at: string
+          claimed_at: string | null
+          claimed_by: string | null
+          created_at: string
+          deduplication_key: string
+          delivered_at: string | null
+          event_type: string
+          id: string
+          last_error_code: string | null
+          payload: Json
+          payload_version: number
+          recipient_id: string
+          resource_id: string
+          resource_type: string
+          state: string
+        }
+        Insert: {
+          attempt_count?: number
+          available_at?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          deduplication_key: string
+          delivered_at?: string | null
+          event_type: string
+          id?: string
+          last_error_code?: string | null
+          payload?: Json
+          payload_version?: number
+          recipient_id: string
+          resource_id: string
+          resource_type: string
+          state?: string
+        }
+        Update: {
+          attempt_count?: number
+          available_at?: string
+          claimed_at?: string | null
+          claimed_by?: string | null
+          created_at?: string
+          deduplication_key?: string
+          delivered_at?: string | null
+          event_type?: string
+          id?: string
+          last_error_code?: string | null
+          payload?: Json
+          payload_version?: number
+          recipient_id?: string
+          resource_id?: string
+          resource_type?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "notification_outbox_recipient_id_fkey"
+            columns: ["recipient_id"]
             isOneToOne: false
             referencedRelation: "profiles"
             referencedColumns: ["id"]
@@ -1431,6 +1699,10 @@ export type Database = {
           version: number
         }[]
       }
+      add_moderation_note: {
+        Args: { input_body: string; input_report_id: string }
+        Returns: string
+      }
       begin_item_photo_upload: {
         Args: {
           input_expected_version: number
@@ -1472,6 +1744,28 @@ export type Database = {
           input_trip_id: string
         }
         Returns: number
+      }
+      claim_notification_outbox: {
+        Args: { input_limit?: number; input_worker_id: string }
+        Returns: {
+          attempt_count: number
+          event_id: string
+          event_type: string
+          payload: Json
+          payload_version: number
+          recipient_id: string
+          resource_id: string
+          resource_type: string
+        }[]
+      }
+      complete_notification_outbox: {
+        Args: {
+          input_error_code?: string
+          input_event_id: string
+          input_success: boolean
+          input_worker_id: string
+        }
+        Returns: undefined
       }
       consume_auth_rate_limit: {
         Args: { key_hash: string; operation: string }
@@ -1638,6 +1932,70 @@ export type Database = {
           trip_id: string
         }[]
       }
+      get_moderation_case_history: {
+        Args: { input_report_id: string }
+        Returns: {
+          actor_id: string
+          body: string
+          code: string
+          created_at: string
+          entry_id: string
+          entry_type: string
+        }[]
+      }
+      get_moderation_evidence: {
+        Args: { input_purpose_code: string; input_report_id: string }
+        Returns: {
+          booking_status: string
+          declared_contents: string
+          handling_notes: string
+          item_description: string
+          item_title: string
+          message_body: string
+          message_created_at: string
+          message_id: string
+        }[]
+      }
+      get_moderation_report: {
+        Args: { input_report_id: string }
+        Returns: {
+          booking_id: string
+          booking_status: string
+          conversation_id: string
+          description: string
+          destination_name: string
+          item_title: string
+          origin_name: string
+          reason_code: string
+          report_id: string
+          reported_account_status: string
+          reported_display_name: string
+          reported_message_id: string
+          reported_user_id: string
+          reporter_display_name: string
+          reporter_id: string
+          state: string
+          submitted_at: string
+        }[]
+      }
+      get_moderation_report_queue: {
+        Args: {
+          input_before_created_at?: string
+          input_before_id?: string
+          input_limit?: number
+        }
+        Returns: {
+          booking_id: string
+          conversation_id: string
+          reason_code: string
+          report_id: string
+          reported_display_name: string
+          reported_message_id: string
+          reported_user_id: string
+          state: string
+          submitted_at: string
+        }[]
+      }
       get_my_bookings: {
         Args: { input_limit?: number; input_offset?: number }
         Returns: {
@@ -1684,6 +2042,14 @@ export type Database = {
           unread_count: number
         }[]
       }
+      get_my_staff_access: {
+        Args: never
+        Returns: {
+          aal2: boolean
+          is_staff: boolean
+          roles: string[]
+        }[]
+      }
       get_public_delivery_request: {
         Args: { input_request_id: string }
         Returns: {
@@ -1716,6 +2082,16 @@ export type Database = {
           origin_location_id: string
           owner_id: string
           status: string
+        }[]
+      }
+      get_staff_assignments: {
+        Args: never
+        Returns: {
+          assignment_id: string
+          display_name: string
+          granted_at: string
+          role_code: string
+          user_id: string
         }[]
       }
       get_trip_matches: {
@@ -1754,11 +2130,23 @@ export type Database = {
           weight_grams: number
         }[]
       }
+      grant_staff_role: {
+        Args: {
+          input_reason: string
+          input_role_code: string
+          input_user_id: string
+        }
+        Returns: string
+      }
       mark_conversation_read: {
         Args: {
           input_conversation_id: string
           input_through_message_id?: string
         }
+        Returns: string
+      }
+      open_moderation_report: {
+        Args: { input_report_id: string }
         Returns: string
       }
       propose_booking: {
@@ -1781,6 +2169,19 @@ export type Database = {
         Args: { input_expected_version: number; input_trip_id: string }
         Returns: number
       }
+      record_moderation_decision: {
+        Args: {
+          input_decision_code: string
+          input_rationale: string
+          input_reason_code: string
+          input_report_id: string
+          input_target_account_state?: string
+        }
+        Returns: {
+          account_state: string
+          report_state: string
+        }[]
+      }
       reject_booking: {
         Args: {
           input_booking_id: string
@@ -1799,6 +2200,10 @@ export type Database = {
           request_version: number
           storage_path: string
         }[]
+      }
+      revoke_staff_role: {
+        Args: { input_assignment_id: string; input_reason: string }
+        Returns: undefined
       }
       send_conversation_message: {
         Args: { input_body: string; input_conversation_id: string }

@@ -1,5 +1,5 @@
 import 'server-only';
-import { requireActiveAccount } from '@/lib/auth/session';
+import { requireAccountHistoryAccess } from '@/lib/auth/session';
 import type { Locale } from '@/lib/auth/validation';
 
 export type ConversationSummary = {
@@ -36,13 +36,13 @@ export type Message = {
 };
 
 export async function loadConversations(locale: Locale) {
-  const { client } = await requireActiveAccount(locale);
+  const { client } = await requireAccountHistoryAccess(locale);
   const result = await client.rpc('get_my_conversations', { input_limit: 50 });
   if (result.error) throw new Error('Unable to load conversations.');
   return result.data as ConversationSummary[];
 }
 export async function loadConversation(locale: Locale, id: string) {
-  const { client, user } = await requireActiveAccount(locale);
+  const { client, user } = await requireAccountHistoryAccess(locale);
   const [context, messages] = await Promise.all([
     client.rpc('get_conversation', { input_conversation_id: id }),
     client.rpc('get_conversation_messages', {
@@ -72,7 +72,7 @@ export async function loadBookingConversation(
   locale: Locale,
   bookingId: string,
 ) {
-  const { client } = await requireActiveAccount(locale);
+  const { client } = await requireAccountHistoryAccess(locale);
   const result = await client.rpc('get_booking_conversation', {
     input_booking_id: bookingId,
   });

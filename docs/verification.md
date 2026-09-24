@@ -1,5 +1,9 @@
 # Foundation verification record
 
+## Phase 1J verification contract
+
+Checks cover member denial, forged metadata, AAL1 denial, AAL2 access, support/moderator separation, live role revocation, evidence audit, immutable records, account transitions, transactional outbox production and idempotent worker claiming. Exact-head CI runs format, lint, strict types, coverage, build, consumer/admin Playwright, database reset/lint/pgTAP, all prior domain checks and public-repository secret/history scans. Staging uses synthetic member/support/moderator identities and removes them afterward.
+
 Phase 1I verification covers conversation derivation, participant-only history, sender/direct-write denial, terminal closure, script-like plain text, payload limits, database throttling, unread cursors, unrelated-report denial and member-invisible report storage.
 
 ## Phase 1G local product-UI verification (2026-09-23)
