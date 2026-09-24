@@ -1,5 +1,7 @@
 # Flyco product specification
 
+Phase 1I adds private booking-scoped conversations from proposal onward. Proposed and accepted bookings allow plain-text messages; terminal bookings retain participant-readable history but reject new sends. Structured reports are limited to actual booking participants and remain hidden from member reads.
+
 ## Phase 1F booking scope
 
 V1 bookings are sender-initiated proposals from a current deterministic match. Traveler acceptance reserves declared item weight atomically; proposing does not reserve. Before payment exists, either participant may cancel a proposed or accepted booking and accepted cancellation releases capacity. Proposed, accepted, rejected, cancelled and expired are the only implemented states. Payment, chat, fulfillment, disputes and reviews remain separate scopes.

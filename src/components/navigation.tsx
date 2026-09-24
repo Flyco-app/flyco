@@ -12,6 +12,7 @@ export function Navigation({ locale }: { locale: Locale }) {
     { path: `/${locale}/delivery-requests`, label: d.requests, icon: 'parcel' },
     { path: `/${locale}/trips`, label: d.trips, icon: 'plane' },
     { path: `/${locale}/bookings`, label: d.bookings, icon: 'booking' },
+    { path: `/${locale}/messages`, label: d.messages, icon: 'message' },
     { path: `/${locale}/profile`, label: d.account, icon: 'user' },
   ];
   return (
@@ -25,7 +26,7 @@ export function Navigation({ locale }: { locale: Locale }) {
               i === 0
                 ? path === link.path
                 : path.startsWith(link.path) ||
-                  (i === 4 && path === `/${locale}/settings`)
+                  (i === 5 && path === `/${locale}/settings`)
             )
               ? 'page'
               : undefined

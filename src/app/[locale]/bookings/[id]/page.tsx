@@ -17,6 +17,8 @@ import { loadBooking } from '@/modules/bookings/queries';
 import { bookingIdSchema } from '@/modules/bookings/validation';
 import { formatWeight } from '@/modules/delivery-requests/validation';
 import { policyCopy } from '@/modules/policy/config';
+import { loadBookingConversation } from '@/modules/messaging/queries';
+import { messagingCopy } from '@/modules/messaging/copy';
 
 function CommandFields({
   locale,
@@ -52,6 +54,8 @@ export default async function BookingPage({
   const cancellable = proposed || booking.status === 'accepted';
   const u = uiCopy[locale];
   const policy = policyCopy[locale];
+  const conversationId = await loadBookingConversation(locale, input.id);
+  const messaging = messagingCopy[locale];
   const formatDate = (value: string) =>
     new Intl.DateTimeFormat(locale, {
       dateStyle: 'medium',
@@ -82,6 +86,11 @@ export default async function BookingPage({
             ? u.acceptedHint
             : u.terminalHint}
       </p>
+      {conversationId && (
+        <Link className="button" href={`/${locale}/messages/${conversationId}`}>
+          {messaging.open}
+        </Link>
+      )}
       <div className="space-y-2 rounded-xl border p-4">
         <h2 className="font-semibold">{booking.item_title}</h2>
         <p>

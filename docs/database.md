@@ -1,5 +1,7 @@
 # Database model and access design
 
+Phase 1I adds `conversations` (unique per booking), `conversation_participants` (read cursors), immutable `messages`, private PostgreSQL limiter buckets, and default-deny `safety_reports`/`safety_report_events`. Foreign keys use `RESTRICT`; communication and safety evidence are not member-deletable. See [messaging](messaging.md) and [reporting](reporting.md).
+
 ## Phase 1F implemented schema
 
 `bookings` preserves one sender-initiated proposal history per match and copies server-derived participants, source relationships and declared integer-gram weight. Composite foreign keys prevent changing the match/trip/request relationship. `capacity_reservations` has one exact-weight row per accepted booking and an active partial index by trip. `booking_events` is append-only; `booking_command_receipts` deduplicates actor/command UUID keys. All four are API-denied base tables behind narrow participant RPCs. See [bookings](bookings.md).
