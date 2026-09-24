@@ -1,5 +1,7 @@
 # Authentication and authorization
 
+Phase 1I messaging/report tables have RLS enabled and no application-role table grants. Fixed-search-path RPCs derive the actor, verify booking participation/account status, constrain terminal sends and own sender/timestamp/report state. PostgreSQL user/conversation buckets provide serverless-safe throttling. Plain-text rendering and negative API tests cover XSS, IDOR and forgery.
+
 ## Phase 1F booking boundary
 
 Booking rows, reservations, receipts and audit events are unavailable through direct anonymous/member table access. Participant-only RPCs derive identities from a current match, enforce live account state, lock rows, validate expected versions and accept UUID idempotency keys. Only a sender can propose; only the traveler can accept/reject; either participant can cancel and release accepted capacity. Projection fields are allowlisted and exclude contact details, declared contents, storage paths, internal state and audit data. Concurrent capacity safety is enforced by locking the trip before summing and inserting active reservations.

@@ -1,5 +1,7 @@
 # Foundation verification record
 
+Phase 1I verification covers conversation derivation, participant-only history, sender/direct-write denial, terminal closure, script-like plain text, payload limits, database throttling, unread cursors, unrelated-report denial and member-invisible report storage.
+
 ## Phase 1G local product-UI verification (2026-09-23)
 
 - Frozen pnpm install completed with the committed lockfile; no dependency was added.

@@ -1,5 +1,7 @@
 # Phase 1G — product experience
 
+Phase 1I adds Messages navigation, a mobile-first booking inbox, contextual conversation screen, unread count, bounded plain-text composer and accessible private-report disclosures. FR/EN/AR copy uses logical layout for RTL. Explicit refresh is the V1 fallback.
+
 ## Baseline audit (before implementation)
 
 Inspected all routes under `src/app`, both domain forms, profile image rendering, auth/domain dictionaries, query DTOs and existing browser tests on merged main `ad7daaf`.

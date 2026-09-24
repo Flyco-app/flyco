@@ -1,5 +1,7 @@
 # API and state design
 
+Phase 1I exposes participant-only conversation projections, bounded cursor-based message history, send/mark-read commands and structured report submission. Clients never supply authoritative sender, participant, timestamp, report state or limiter values. No generic CRUD API exists.
+
 ## Phase 1F booking commands
 
 Authenticated server actions call `propose_booking`, `accept_booking`, `reject_booking` and `cancel_booking`. An explicit `expire_booking` command supports bounded persistence work. Commands validate UUIDs and expected versions with Zod, enforce trusted action origin, require live account eligibility where the transition creates obligations, and return safe conflicts. `get_my_bookings(limit, offset)` and `get_booking(id)` are participant-only projections. No generic booking PATCH or table-write API exists. See [bookings](bookings.md).

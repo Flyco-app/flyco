@@ -4,6 +4,7 @@ export type IconName =
   | 'parcel'
   | 'plane'
   | 'booking'
+  | 'message'
   | 'user'
   | 'arrow'
   | 'check'
@@ -14,6 +15,7 @@ const paths: Record<IconName, string> = {
   parcel: 'm3 7 9-4 9 4v10l-9 4-9-4Zm0 0 9 5 9-5M12 12v9M7 5l10 5',
   plane: 'm22 2-7 20-4-9-9-4Zm0 0L11 13',
   booking: 'M5 4h14v17H5ZM9 4V2m6 2V2M8 10h8m-8 4h5m-5 4h3',
+  message: 'M4 5h16v12H8l-4 4Zm4 4h8m-8 4h5',
   user: 'M20 21v-2a7 7 0 0 0-14 0v2M16 7a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
   arrow: 'M4 12h16m-6-6 6 6-6 6',
   check: 'm5 12 4 4L19 6',

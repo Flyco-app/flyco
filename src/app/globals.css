@@ -141,6 +141,44 @@ input[type='file']::file-selector-button {
   border-radius: 0.4rem;
   margin-inline-end: 0.75rem;
 }
+
+.message-list {
+  display: grid;
+  gap: 1rem;
+  padding: 0;
+  list-style: none;
+}
+.message-list li {
+  max-width: min(85%, 42rem);
+  padding: 0.9rem 1rem;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  background: var(--surface);
+}
+.message-list li > div {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: 0.75rem;
+  font-size: 0.85rem;
+}
+.message-list time {
+  color: var(--muted-foreground);
+}
+.message-own {
+  margin-inline-start: auto;
+  background: var(--surface-soft) !important;
+}
+.message-other {
+  margin-inline-end: auto;
+}
+.alert-success {
+  border: 1px solid var(--success);
+  background: var(--success-bg);
+  color: var(--success);
+  border-radius: var(--radius);
+  padding: 0.75rem 1rem;
+}
 .button {
   display: inline-flex;
   justify-content: center;

@@ -1,5 +1,17 @@
 # Flyco implementation roadmap
 
+## Phase 1I — private booking messaging and reporting
+
+**Objective:** booking participants exchange bounded logistics messages and submit structured private reports without general chat or staff tooling.
+
+**Dependencies:** Phase 1H booking, item-visibility and policy boundaries.
+
+**Implementation:** one conversation per booking, immutable messages, read cursors, PostgreSQL throttling, terminal-state closure, default-deny reports and translated UI.
+
+**Tests:** unit validation, pgTAP grants/RLS/schema, direct participant/stranger API checks, UI/RTL and full regression checks.
+
+**Definition of done:** participant-only access, terminal read-only behavior, private interaction-scoped reports, passing CI/staging verification and untouched production.
+
 Each phase is independently reviewable and must pass its own security, database, application and hosted-staging checks before the next phase begins. Production remains disabled until the launch gates in `docs/deployment.md` are approved.
 
 ## Phase 0 — engineering foundation (complete)

@@ -70,7 +70,7 @@ The temporarily public GitHub repository is [Flyco-app/flyco](https://github.com
 
 ## Engineering documentation
 
-[Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [UI/UX](docs/ui-ux.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Trips](docs/trips.md) · [Delivery requests](docs/delivery-requests.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Bookings](docs/bookings.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
+[Product](docs/product-spec.md) · [Architecture](docs/architecture.md) · [UI/UX](docs/ui-ux.md) · [Database](docs/database.md) · [Security](docs/security.md) · [API/state machines](docs/api-design.md) · [Trips](docs/trips.md) · [Delivery requests](docs/delivery-requests.md) · [Auth/roles](docs/auth.md) · [Payments](docs/payments.md) · [Matching](docs/matching.md) · [Bookings](docs/bookings.md) · [Messaging](docs/messaging.md) · [Reporting](docs/reporting.md) · [Testing](docs/testing.md) · [Deployment](docs/deployment.md) · [Observability](docs/observability.md) · [Roadmap](docs/roadmap.md) · [Decisions](docs/decisions.md).
 
 Read [AGENTS.md](AGENTS.md) before future Codex work. Business launch blockers include supported Morocco-recipient payout arrangements, carriage/customs eligibility, liability, pricing/refund policy, identity/privacy rules and commercial hosting/recovery plans.
 

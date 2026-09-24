@@ -1,0 +1,36 @@
+begin;
+select plan(30);
+
+select has_table('public','conversations','conversations exists');
+select has_table('public','conversation_participants','read state exists');
+select has_table('public','messages','messages exists');
+select has_table('public','conversation_events','conversation audit exists');
+select has_table('public','safety_reports','reports exist');
+select has_table('private','message_rate_limits','database limiter exists');
+select col_is_pk('public','messages','id','messages have stable ids');
+select col_is_pk('public','conversations','id','conversations have stable ids');
+select col_is_pk('public','conversation_participants',array['conversation_id','user_id'],'one read cursor per participant');
+select has_index('public','conversations','conversations_booking_id_key','one conversation per booking');
+select has_index('public','messages','messages_conversation_cursor_idx','message cursor is indexed');
+select has_index('public','messages','messages_sender_fk_idx','message sender FK is indexed');
+select has_index('public','conversation_events','conversation_events_actor_fk_idx','conversation event actor FK is indexed');
+select has_index('public','safety_reports','safety_reports_booking_created_idx','report context is indexed');
+select has_index('public','safety_reports','safety_reports_reporter_fk_idx','reporter FK is indexed');
+select has_index('public','safety_report_events','safety_report_events_actor_fk_idx','report event actor FK is indexed');
+select ok((select relrowsecurity from pg_class where oid='public.conversations'::regclass),'conversation RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.conversation_participants'::regclass),'participant RLS enabled');
+select ok((select relrowsecurity from pg_class where oid='public.messages'::regclass),'message RLS enabled');
+select table_privs_are('public','conversation_events','authenticated',array[]::text[],'members cannot forge conversation audit');
+select ok((select relrowsecurity from pg_class where oid='public.safety_reports'::regclass),'report RLS enabled');
+select ok(has_function_privilege('authenticated','public.send_conversation_message(uuid,text)','execute'),'send only authenticated');
+select ok(has_function_privilege('authenticated','public.submit_safety_report(uuid,uuid,uuid,uuid,text,text)','execute'),'report only authenticated');
+select ok(has_function_privilege('authenticated','public.get_conversation_messages(uuid,integer,timestamp with time zone,uuid)','execute'),'history only authenticated');
+select table_privs_are('public','messages','anon',array[]::text[],'anonymous has no message table privileges');
+select table_privs_are('public','messages','authenticated',array[]::text[],'members have no direct message privileges');
+select table_privs_are('public','safety_reports','authenticated',array[]::text[],'members cannot read reports');
+select table_privs_are('public','conversation_participants','authenticated',array[]::text[],'members cannot forge read cursors');
+select table_privs_are('private','message_rate_limits','authenticated',array[]::text[],'members cannot forge limiter state');
+select triggers_are('public','bookings',array['booking_conversation_after_insert'],'booking creates conversation');
+
+select * from finish();
+rollback;

@@ -246,6 +246,127 @@ export type Database = {
           },
         ]
       }
+      conversation_events: {
+        Row: {
+          actor_id: string | null
+          conversation_id: string
+          created_at: string
+          event_type: string
+          id: number
+        }
+        Insert: {
+          actor_id?: string | null
+          conversation_id: string
+          created_at?: string
+          event_type: string
+          id?: never
+        }
+        Update: {
+          actor_id?: string | null
+          conversation_id?: string
+          created_at?: string
+          event_type?: string
+          id?: never
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_events_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversation_participants: {
+        Row: {
+          conversation_id: string
+          last_read_at: string
+          user_id: string
+        }
+        Insert: {
+          conversation_id: string
+          last_read_at?: string
+          user_id: string
+        }
+        Update: {
+          conversation_id?: string
+          last_read_at?: string
+          user_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversation_participants_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversation_participants_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      conversations: {
+        Row: {
+          booking_id: string
+          created_at: string
+          id: string
+          last_message_at: string | null
+          sender_id: string
+          traveler_id: string
+        }
+        Insert: {
+          booking_id: string
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          sender_id: string
+          traveler_id: string
+        }
+        Update: {
+          booking_id?: string
+          created_at?: string
+          id?: string
+          last_message_at?: string | null
+          sender_id?: string
+          traveler_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "conversations_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: true
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "conversations_traveler_id_fkey"
+            columns: ["traveler_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       declared_items: {
         Row: {
           category_code: string
@@ -796,6 +917,45 @@ export type Database = {
           },
         ]
       }
+      messages: {
+        Row: {
+          body: string
+          conversation_id: string
+          created_at: string
+          id: string
+          sender_id: string
+        }
+        Insert: {
+          body: string
+          conversation_id: string
+          created_at?: string
+          id?: string
+          sender_id: string
+        }
+        Update: {
+          body?: string
+          conversation_id?: string
+          created_at?: string
+          id?: string
+          sender_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "messages_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "messages_sender_id_fkey"
+            columns: ["sender_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       policy_acknowledgements: {
         Row: {
           acknowledged_at: string
@@ -942,6 +1102,120 @@ export type Database = {
           updated_at?: string
         }
         Relationships: []
+      }
+      safety_report_events: {
+        Row: {
+          actor_id: string | null
+          created_at: string
+          event_type: string
+          id: number
+          report_id: string
+        }
+        Insert: {
+          actor_id?: string | null
+          created_at?: string
+          event_type: string
+          id?: never
+          report_id: string
+        }
+        Update: {
+          actor_id?: string | null
+          created_at?: string
+          event_type?: string
+          id?: never
+          report_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_report_events_actor_id_fkey"
+            columns: ["actor_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_report_events_report_id_fkey"
+            columns: ["report_id"]
+            isOneToOne: false
+            referencedRelation: "safety_reports"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      safety_reports: {
+        Row: {
+          booking_id: string
+          conversation_id: string
+          created_at: string
+          description: string
+          id: string
+          reason_code: string
+          reported_message_id: string | null
+          reported_user_id: string | null
+          reporter_id: string
+          state: string
+        }
+        Insert: {
+          booking_id: string
+          conversation_id: string
+          created_at?: string
+          description: string
+          id?: string
+          reason_code: string
+          reported_message_id?: string | null
+          reported_user_id?: string | null
+          reporter_id: string
+          state?: string
+        }
+        Update: {
+          booking_id?: string
+          conversation_id?: string
+          created_at?: string
+          description?: string
+          id?: string
+          reason_code?: string
+          reported_message_id?: string | null
+          reported_user_id?: string | null
+          reporter_id?: string
+          state?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "safety_reports_booking_id_fkey"
+            columns: ["booking_id"]
+            isOneToOne: false
+            referencedRelation: "bookings"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_conversation_id_fkey"
+            columns: ["conversation_id"]
+            isOneToOne: false
+            referencedRelation: "conversations"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_reported_message_id_fkey"
+            columns: ["reported_message_id"]
+            isOneToOne: false
+            referencedRelation: "messages"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_reported_user_id_fkey"
+            columns: ["reported_user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "safety_reports_reporter_id_fkey"
+            columns: ["reporter_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       trip_cancellations: {
         Row: {
@@ -1287,12 +1561,46 @@ export type Database = {
           version: number
         }[]
       }
+      get_booking_conversation: {
+        Args: { input_booking_id: string }
+        Returns: string
+      }
       get_booking_item_photos: {
         Args: { input_booking_id: string }
         Returns: {
           mime_type: string
           photo_id: string
           storage_path: string
+        }[]
+      }
+      get_conversation: {
+        Args: { input_conversation_id: string }
+        Returns: {
+          booking_id: string
+          booking_status: string
+          can_send: boolean
+          category_code: string
+          conversation_id: string
+          counterparty_display_name: string
+          counterparty_id: string
+          destination_name: string
+          item_title: string
+          origin_name: string
+        }[]
+      }
+      get_conversation_messages: {
+        Args: {
+          input_before?: string
+          input_before_id?: string
+          input_conversation_id: string
+          input_limit?: number
+        }
+        Returns: {
+          body: string
+          created_at: string
+          message_id: string
+          sender_display_name: string
+          sender_id: string
         }[]
       }
       get_delivery_request_matches: {
@@ -1358,6 +1666,22 @@ export type Database = {
           status: string
           trip_id: string
           version: number
+        }[]
+      }
+      get_my_conversations: {
+        Args: { input_limit?: number }
+        Returns: {
+          booking_id: string
+          booking_status: string
+          conversation_id: string
+          counterparty_display_name: string
+          counterparty_id: string
+          destination_name: string
+          item_title: string
+          last_message_at: string
+          last_message_preview: string
+          origin_name: string
+          unread_count: number
         }[]
       }
       get_public_delivery_request: {
@@ -1430,6 +1754,13 @@ export type Database = {
           weight_grams: number
         }[]
       }
+      mark_conversation_read: {
+        Args: {
+          input_conversation_id: string
+          input_through_message_id?: string
+        }
+        Returns: string
+      }
       propose_booking: {
         Args: { input_idempotency_key: string; input_match_id: string }
         Returns: {
@@ -1467,6 +1798,27 @@ export type Database = {
         Returns: {
           request_version: number
           storage_path: string
+        }[]
+      }
+      send_conversation_message: {
+        Args: { input_body: string; input_conversation_id: string }
+        Returns: {
+          created_at: string
+          message_id: string
+        }[]
+      }
+      submit_safety_report: {
+        Args: {
+          input_booking_id: string
+          input_conversation_id: string
+          input_description: string
+          input_reason_code: string
+          input_reported_message_id: string
+          input_reported_user_id: string
+        }
+        Returns: {
+          report_id: string
+          submitted_at: string
         }[]
       }
       sync_own_auth_trust: { Args: never; Returns: undefined }

@@ -112,9 +112,30 @@ test('sender proposes and traveler atomically accepts a booking', async ({
       senderPage.getByText('Proposed', { exact: true }),
     ).toBeVisible();
     await expect(senderPage.getByText('E2E Booking Traveler')).toBeVisible();
+    await senderPage.getByRole('link', { name: 'Open conversation' }).click();
+    await expect(
+      senderPage.getByRole('heading', { name: 'E2E Booking Traveler' }),
+    ).toBeVisible();
+    await senderPage
+      .getByLabel('Write a message')
+      .fill('<script>plain text only</script>');
+    await senderPage.getByRole('button', { name: 'Send message' }).click();
+    await expect(
+      senderPage.getByText('<script>plain text only</script>'),
+    ).toBeVisible();
 
     const travelerPage = await travelerContext.newPage();
     await login(travelerPage, travelerEmail, password);
+    await travelerPage.goto('/en/messages');
+    await expect(travelerPage.getByText('E2E Booking Sender')).toBeVisible();
+    await travelerPage.getByRole('link', { name: 'Open conversation' }).click();
+    await expect(
+      travelerPage.getByText('<script>plain text only</script>'),
+    ).toBeVisible();
+    await travelerPage
+      .getByLabel('Write a message')
+      .fill('I can review this before accepting.');
+    await travelerPage.getByRole('button', { name: 'Send message' }).click();
     await travelerPage.goto('/en/bookings');
     await expect(
       travelerPage.getByRole('heading', { name: 'My bookings' }),
@@ -151,9 +172,19 @@ test('sender proposes and traveler atomically accepts a booking', async ({
     await expect(
       senderPage.locator('.capacity-panel').getByText('5 kg').first(),
     ).toBeVisible();
+    await senderPage.getByRole('link', { name: 'Open conversation' }).click();
+    await expect(senderPage.getByText(/booking is closed/i)).toBeVisible();
+    await expect(senderPage.getByLabel('Write a message')).toHaveCount(0);
   } finally {
     sql(
       `
+      delete from public.safety_report_events where report_id in (select id from public.safety_reports where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid));
+      delete from public.safety_reports where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid);
+      delete from public.conversation_events where conversation_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid));
+      delete from private.message_rate_limits where key_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)) or key_id in (select sender_id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)) or key_id in (select traveler_id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid));
+      delete from public.messages where conversation_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid));
+      delete from public.conversation_participants where conversation_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid));
+      delete from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid);
       delete from public.policy_acknowledgements where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid) or delivery_request_id=:'request_id'::uuid;
       delete from public.booking_command_receipts where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid);
       delete from public.booking_events where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid);

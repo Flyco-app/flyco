@@ -141,6 +141,90 @@ try {
     assert.equal(proposal.error, null);
     bookingIds.push(proposal.data[0].booking_id);
   }
+  const conversation = await senderA.rpc('get_booking_conversation', {
+    input_booking_id: bookingIds[0],
+  });
+  assert.equal(conversation.error, null);
+  assert.match(conversation.data, /^[0-9a-f-]{36}$/);
+  assert.equal(
+    (
+      await other.rpc('get_conversation', {
+        input_conversation_id: conversation.data,
+      })
+    ).data.length,
+    0,
+  );
+  const sent = await senderA.rpc('send_conversation_message', {
+    input_conversation_id: conversation.data,
+    input_body: '<script>alert(1)</script> Please confirm the sealed envelope.',
+  });
+  assert.equal(sent.error, null);
+  const reply = await traveler.rpc('send_conversation_message', {
+    input_conversation_id: conversation.data,
+    input_body: 'I can review it before accepting.',
+  });
+  assert.equal(reply.error, null);
+  const history = await senderA.rpc('get_conversation_messages', {
+    input_conversation_id: conversation.data,
+    input_limit: 50,
+    input_before: null,
+    input_before_id: null,
+  });
+  assert.equal(history.error, null);
+  assert.equal(history.data.length, 2);
+  assert.equal(
+    history.data[1].body,
+    '<script>alert(1)</script> Please confirm the sealed envelope.',
+  );
+  assert.equal((await other.from('messages').select('*')).error?.code, '42501');
+  const report = await senderA.rpc('submit_safety_report', {
+    input_booking_id: bookingIds[0],
+    input_conversation_id: conversation.data,
+    input_reported_user_id: users[0].id,
+    input_reported_message_id: reply.data[0].message_id,
+    input_reason_code: 'inappropriate_content',
+    input_description:
+      'This synthetic report verifies private evidence references.',
+  });
+  assert.equal(report.error, null);
+  assert.equal(
+    (await traveler.from('safety_reports').select('*')).error?.code,
+    '42501',
+  );
+  for (let index = 0; index < 4; index += 1) {
+    assert.equal(
+      (
+        await senderA.rpc('send_conversation_message', {
+          input_conversation_id: conversation.data,
+          input_body: `Synthetic burst message ${index + 1}`,
+        })
+      ).error,
+      null,
+    );
+  }
+  assert.match(
+    (
+      await senderA.rpc('send_conversation_message', {
+        input_conversation_id: conversation.data,
+        input_body: 'This sixth burst message must be throttled.',
+      })
+    ).error?.message,
+    /rate limit/,
+  );
+  assert.equal(
+    (
+      await other.rpc('submit_safety_report', {
+        input_booking_id: bookingIds[0],
+        input_conversation_id: conversation.data,
+        input_reported_user_id: users[0].id,
+        input_reported_message_id: null,
+        input_reason_code: 'other',
+        input_description:
+          'Unrelated users must not submit interaction reports.',
+      })
+    ).error?.code,
+    '42501',
+  );
   assert.equal(
     (
       await anonymous.rpc('get_my_bookings', {
@@ -205,6 +289,32 @@ try {
     input_reason: 'Synthetic release verification',
   });
   assert.equal(cancel.error, null);
+  const winnerConversation = await winnerClient.rpc(
+    'get_booking_conversation',
+    {
+      input_booking_id: bookingIds[winner],
+    },
+  );
+  assert.equal(winnerConversation.error, null);
+  assert.match(
+    (
+      await winnerClient.rpc('send_conversation_message', {
+        input_conversation_id: winnerConversation.data,
+        input_body: 'Terminal bookings must reject new messages.',
+      })
+    ).error?.message,
+    /messaging is closed/,
+  );
+  assert.ok(
+    (
+      await winnerClient.rpc('get_conversation_messages', {
+        input_conversation_id: winnerConversation.data,
+        input_limit: 50,
+        input_before: null,
+        input_before_id: null,
+      })
+    ).data,
+  );
   const loserClient = loser === 0 ? senderA : senderB;
   const rematch = await loserClient.rpc('get_delivery_request_matches', {
     input_request_id: requestIds[loser],
@@ -223,7 +333,17 @@ try {
       [status.DB_URL, '-v', 'ON_ERROR_STOP=1', '-v', `trip_id=${tripId}`],
       {
         input:
-          "delete from public.policy_acknowledgements where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid) or delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.booking_command_receipts where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.booking_events where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.capacity_reservations where trip_id=:'trip_id'::uuid; delete from public.bookings where trip_id=:'trip_id'::uuid; delete from public.matches where trip_id=:'trip_id'::uuid; delete from public.delivery_request_events where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.declared_items where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%'); delete from public.trip_events where trip_id=:'trip_id'::uuid; delete from public.trip_categories where trip_id=:'trip_id'::uuid; delete from public.trips where id=:'trip_id'::uuid;",
+          "delete from public.conversation_events where conversation_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid));",
+        stdio: ['pipe', 'ignore', 'ignore'],
+      },
+    );
+  if (tripId)
+    execFileSync(
+      'psql',
+      [status.DB_URL, '-v', 'ON_ERROR_STOP=1', '-v', `trip_id=${tripId}`],
+      {
+        input:
+          "delete from public.safety_report_events where report_id in (select id from public.safety_reports where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)); delete from public.safety_reports where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from private.message_rate_limits where key_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)) or key_id in (select sender_id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)) or key_id in (select traveler_id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)); delete from public.messages where conversation_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)); delete from public.conversation_participants where conversation_id in (select id from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid)); delete from public.conversations where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.policy_acknowledgements where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid) or delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.booking_command_receipts where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.booking_events where booking_id in (select id from public.bookings where trip_id=:'trip_id'::uuid); delete from public.capacity_reservations where trip_id=:'trip_id'::uuid; delete from public.bookings where trip_id=:'trip_id'::uuid; delete from public.matches where trip_id=:'trip_id'::uuid; delete from public.delivery_request_events where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.declared_items where delivery_request_id in (select id from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%')); delete from public.delivery_requests where owner_id in (select id from public.profiles where display_name like 'Booking sender-%'); delete from public.trip_events where trip_id=:'trip_id'::uuid; delete from public.trip_categories where trip_id=:'trip_id'::uuid; delete from public.trips where id=:'trip_id'::uuid;",
         stdio: ['pipe', 'ignore', 'ignore'],
       },
     );

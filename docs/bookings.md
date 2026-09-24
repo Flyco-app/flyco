@@ -1,5 +1,7 @@
 # Booking proposals and capacity reservations
 
+Every proposal creates exactly one conversation with server-derived participants. Messaging is available while proposed or accepted; terminal bookings preserve read-only history. This does not widen booking or item-photo authorization.
+
 Phase 1F implements a pre-payment booking boundary. A sender may propose a booking from one current Phase 1E match. The traveler may accept or reject it; either participant may cancel a proposed or accepted booking. Payment, fulfillment, delivery evidence, disputes, messaging and reviews remain outside this phase.
 
 ## Initiation and lifecycle
