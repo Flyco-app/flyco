@@ -1,25 +1,18 @@
 import { createServerClient } from '@supabase/ssr';
 import { NextResponse, type NextRequest } from 'next/server';
 import { parseServerEnv } from '@/lib/env/schema';
+import { buildContentSecurityPolicy } from '@/lib/security/csp';
 
 export async function proxy(request: NextRequest) {
   const { SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, APP_ENV } = parseServerEnv(
     process.env,
   );
-  const storageOrigin = SUPABASE_URL ? new URL(SUPABASE_URL).origin : null;
   const nonce = Buffer.from(crypto.randomUUID()).toString('base64');
-  const csp = [
-    `default-src 'self'`,
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic'${APP_ENV === 'local' ? " 'unsafe-eval'" : ''}`,
-    `style-src 'self' 'nonce-${nonce}'`,
-    `img-src 'self' data:${storageOrigin ? ` ${storageOrigin}` : ''}`,
-    `font-src 'self'`,
-    `connect-src 'self'`,
-    `object-src 'none'`,
-    `base-uri 'self'`,
-    `frame-ancestors 'none'`,
-    `form-action 'self'`,
-  ].join('; ');
+  const csp = buildContentSecurityPolicy({
+    appEnv: APP_ENV,
+    nonce,
+    supabaseUrl: SUPABASE_URL,
+  });
   const headers = new Headers(request.headers);
   headers.set('Content-Security-Policy', csp);
   headers.set('x-nonce', nonce);
