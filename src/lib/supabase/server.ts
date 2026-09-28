@@ -18,8 +18,13 @@ export async function createSupabaseServerClient() {
     cookies: {
       getAll: () => cookieStore.getAll(),
       setAll: (items) => {
-        for (const { name, value, options } of items)
-          cookieStore.set(name, value, options);
+        try {
+          for (const { name, value, options } of items)
+            cookieStore.set(name, value, options);
+        } catch {
+          // Server Components cannot write cookies. The proxy refreshes and
+          // clears Auth cookies on the response before rendering reaches here.
+        }
       },
     },
   });

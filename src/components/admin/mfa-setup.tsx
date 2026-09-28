@@ -24,6 +24,11 @@ export function MfaSetup({
     setPending(true);
     setError('');
     const factors = await client.auth.mfa.listFactors();
+    if (factors.error) {
+      setError('Your session could not be verified. Sign in again and retry.');
+      setPending(false);
+      return;
+    }
     const verified = factors.data?.totp.find(
       (factor) => factor.status === 'verified',
     );
@@ -43,7 +48,12 @@ export function MfaSetup({
         factorType: 'totp',
         friendlyName: 'Flyco staff',
       });
-      if (enrollment.error) setError('Unable to enroll an authenticator.');
+      if (enrollment.error)
+        setError(
+          enrollment.error.code === 'mfa_factor_name_conflict'
+            ? 'An authenticator with this name already exists.'
+            : 'Unable to enroll an authenticator. Sign in again and retry.',
+        );
       else {
         const challenge = await client.auth.mfa.challenge({
           factorId: enrollment.data.id,
